@@ -9,7 +9,344 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      categories: {
+        Row: {
+          color: string | null
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      events: {
+        Row: {
+          address: string | null
+          capacity: number | null
+          category_id: string | null
+          created_at: string
+          description: string
+          end_date: string | null
+          event_date: string
+          id: string
+          image_url: string | null
+          latitude: number | null
+          location: string
+          longitude: number | null
+          organizer_id: string
+          short_description: string | null
+          status: Database["public"]["Enums"]["event_status"] | null
+          tags: string[] | null
+          ticket_price: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          capacity?: number | null
+          category_id?: string | null
+          created_at?: string
+          description: string
+          end_date?: string | null
+          event_date: string
+          id?: string
+          image_url?: string | null
+          latitude?: number | null
+          location: string
+          longitude?: number | null
+          organizer_id: string
+          short_description?: string | null
+          status?: Database["public"]["Enums"]["event_status"] | null
+          tags?: string[] | null
+          ticket_price?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          capacity?: number | null
+          category_id?: string | null
+          created_at?: string
+          description?: string
+          end_date?: string | null
+          event_date?: string
+          id?: string
+          image_url?: string | null
+          latitude?: number | null
+          location?: string
+          longitude?: number | null
+          organizer_id?: string
+          short_description?: string | null
+          status?: Database["public"]["Enums"]["event_status"] | null
+          tags?: string[] | null
+          ticket_price?: number | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          data: Json | null
+          id: string
+          message: string
+          read: boolean | null
+          title: string
+          type: Database["public"]["Enums"]["notification_type"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data?: Json | null
+          id?: string
+          message: string
+          read?: boolean | null
+          title: string
+          type: Database["public"]["Enums"]["notification_type"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json | null
+          id?: string
+          message?: string
+          read?: boolean | null
+          title?: string
+          type?: Database["public"]["Enums"]["notification_type"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          email_notifications: boolean | null
+          full_name: string | null
+          id: string
+          location: string | null
+          preferred_categories: string[] | null
+          push_notifications: boolean | null
+          updated_at: string
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          email_notifications?: boolean | null
+          full_name?: string | null
+          id: string
+          location?: string | null
+          preferred_categories?: string[] | null
+          push_notifications?: boolean | null
+          updated_at?: string
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          email_notifications?: boolean | null
+          full_name?: string | null
+          id?: string
+          location?: string | null
+          preferred_categories?: string[] | null
+          push_notifications?: boolean | null
+          updated_at?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
+      review_votes: {
+        Row: {
+          created_at: string
+          id: string
+          is_helpful: boolean
+          review_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_helpful: boolean
+          review_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_helpful?: boolean
+          review_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_votes_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "review_votes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reviews: {
+        Row: {
+          atmosphere_rating: number | null
+          content: string
+          created_at: string
+          event_id: string
+          helpful_count: number | null
+          id: string
+          images: string[] | null
+          organization_rating: number | null
+          rating: number
+          sentiment_score: number | null
+          status: Database["public"]["Enums"]["review_status"] | null
+          title: string
+          updated_at: string
+          user_id: string
+          value_rating: number | null
+          verified_attendance: boolean | null
+        }
+        Insert: {
+          atmosphere_rating?: number | null
+          content: string
+          created_at?: string
+          event_id: string
+          helpful_count?: number | null
+          id?: string
+          images?: string[] | null
+          organization_rating?: number | null
+          rating: number
+          sentiment_score?: number | null
+          status?: Database["public"]["Enums"]["review_status"] | null
+          title: string
+          updated_at?: string
+          user_id: string
+          value_rating?: number | null
+          verified_attendance?: boolean | null
+        }
+        Update: {
+          atmosphere_rating?: number | null
+          content?: string
+          created_at?: string
+          event_id?: string
+          helpful_count?: number | null
+          id?: string
+          images?: string[] | null
+          organization_rating?: number | null
+          rating?: number
+          sentiment_score?: number | null
+          status?: Database["public"]["Enums"]["review_status"] | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          value_rating?: number | null
+          verified_attendance?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_event_attendance: {
+        Row: {
+          attendance_status: string | null
+          created_at: string
+          event_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          attendance_status?: string | null
+          created_at?: string
+          event_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          attendance_status?: string | null
+          created_at?: string
+          event_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_event_attendance_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_event_attendance_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +355,13 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      event_status: "draft" | "published" | "cancelled" | "completed"
+      notification_type:
+        | "new_event"
+        | "review_response"
+        | "event_reminder"
+        | "system"
+      review_status: "pending" | "approved" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +476,15 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      event_status: ["draft", "published", "cancelled", "completed"],
+      notification_type: [
+        "new_event",
+        "review_response",
+        "event_reminder",
+        "system",
+      ],
+      review_status: ["pending", "approved", "rejected"],
+    },
   },
 } as const
