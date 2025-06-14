@@ -10,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { User, LogOut, Settings, Calendar, Home } from 'lucide-react';
+import { User, LogOut, Settings, Calendar, Home, Sparkles } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 const Header = () => {
@@ -23,30 +23,38 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+    <header className="glass-strong border-b border-border/50 sticky top-0 z-50 backdrop-blur-xl">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <Link to="/" className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-lg">V</span>
+        <Link to="/" className="flex items-center space-x-3 group">
+          <div className="relative">
+            <div className="w-10 h-10 coral-gradient rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
+              <Sparkles className="text-white h-5 w-5" />
+            </div>
+            <div className="absolute inset-0 coral-gradient rounded-xl opacity-0 group-hover:opacity-20 transition-opacity duration-300 blur-xl"></div>
           </div>
-          <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-            VibeCatcher
-          </span>
+          <div className="flex flex-col">
+            <span className="text-xl font-bold text-gradient">
+              VibeCatcher
+            </span>
+            <span className="text-xs text-muted-foreground -mt-1">
+              Discover Events
+            </span>
+          </div>
         </Link>
 
-        <nav className="hidden md:flex items-center space-x-6">
+        <nav className="hidden md:flex items-center space-x-8">
           <Link 
             to="/" 
-            className="flex items-center space-x-1 text-gray-600 hover:text-purple-600 transition-colors"
+            className="flex items-center space-x-2 text-foreground/80 hover:text-primary transition-colors duration-200 font-medium group"
           >
-            <Home className="h-4 w-4" />
+            <Home className="h-4 w-4 group-hover:scale-110 transition-transform" />
             <span>Home</span>
           </Link>
           <Link 
             to="/calendar" 
-            className="flex items-center space-x-1 text-gray-600 hover:text-purple-600 transition-colors"
+            className="flex items-center space-x-2 text-foreground/80 hover:text-primary transition-colors duration-200 font-medium group"
           >
-            <Calendar className="h-4 w-4" />
+            <Calendar className="h-4 w-4 group-hover:scale-110 transition-transform" />
             <span>Calendar</span>
           </Link>
         </nav>
@@ -57,32 +65,35 @@ const Header = () => {
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                  <Avatar className="h-8 w-8">
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full ring-2 ring-transparent hover:ring-primary/20 transition-all">
+                  <Avatar className="h-10 w-10 border-2 border-primary/20">
                     <AvatarImage src={user.user_metadata?.avatar_url} />
-                    <AvatarFallback>
+                    <AvatarFallback className="coral-gradient text-white font-semibold">
                       {user.email?.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end">
-                <DropdownMenuItem onClick={() => navigate('/profile')}>
-                  <User className="mr-2 h-4 w-4" />
+              <DropdownMenuContent className="w-56 glass-strong" align="end">
+                <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer hover:bg-primary/10">
+                  <User className="mr-3 h-4 w-4 text-primary" />
                   Profile
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/calendar')}>
-                  <Calendar className="mr-2 h-4 w-4" />
+                <DropdownMenuItem onClick={() => navigate('/calendar')} className="cursor-pointer hover:bg-primary/10">
+                  <Calendar className="mr-3 h-4 w-4 text-primary" />
                   Calendar
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleSignOut}>
-                  <LogOut className="mr-2 h-4 w-4" />
+                <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer hover:bg-destructive/10 text-destructive">
+                  <LogOut className="mr-3 h-4 w-4" />
                   Sign out
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button onClick={() => navigate('/auth')}>
+            <Button 
+              onClick={() => navigate('/auth')}
+              className="primary-button"
+            >
               Sign In
             </Button>
           )}
