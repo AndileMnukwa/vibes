@@ -156,7 +156,7 @@ const AdminEvents = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => navigate(`/events/${event.id}`)}
+                          onClick={() => navigate(`/admin/edit-event/${event.id}`)}
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
