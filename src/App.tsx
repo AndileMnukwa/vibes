@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,6 +11,10 @@ import Auth from "./pages/Auth";
 import EventDetail from "./pages/EventDetail";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import AdminLayout from "./pages/admin/AdminLayout";
+import AdminEvents from "./pages/admin/AdminEvents";
+import AdminCreateEvent from "./pages/admin/AdminCreateEvent";
+import AdminUsers from "./pages/admin/AdminUsers";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import { LocationProvider } from "@/components/location/LocationProvider";
 
@@ -30,6 +35,11 @@ const App = () => (
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/events/:id" element={<EventDetail />} />
                   <Route path="/profile" element={<Profile />} />
+                  <Route path="/admin" element={<AdminLayout />}>
+                    <Route path="events" element={<AdminEvents />} />
+                    <Route path="create-event" element={<AdminCreateEvent />} />
+                    <Route path="users" element={<AdminUsers />} />
+                  </Route>
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>

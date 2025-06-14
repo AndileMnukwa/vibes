@@ -56,7 +56,11 @@ const Index = () => {
           
           {/* Only show Create Event button for admins */}
           {isAdmin && (
-            <Button size="lg" className="bg-purple-600 hover:bg-purple-700">
+            <Button 
+              size="lg" 
+              className="bg-purple-600 hover:bg-purple-700"
+              onClick={() => navigate('/admin/create-event')}
+            >
               <Plus className="mr-2 h-4 w-4" />
               Create Event
             </Button>

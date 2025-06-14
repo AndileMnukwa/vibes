@@ -93,7 +93,12 @@ const Header = () => {
             <>
               {/* Admin Create Event Button */}
               {isAdmin && (
-                <Button variant="ghost" size="sm" className="text-purple-600 hover:text-purple-700">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-purple-600 hover:text-purple-700"
+                  onClick={() => navigate('/admin/create-event')}
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Create Event
                 </Button>
@@ -123,7 +128,7 @@ const Header = () => {
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => navigate('/admin/events')}>
                         <Plus className="mr-2 h-4 w-4" />
-                        <span>Manage Events</span>
+                        <span>Admin Panel</span>
                       </DropdownMenuItem>
                     </>
                   )}

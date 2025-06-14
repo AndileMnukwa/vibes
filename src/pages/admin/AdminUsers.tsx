@@ -1,0 +1,206 @@
+
+import React from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
+import type { Tables } from '@/integrations/supabase/types';
+
+type UserWithRole = {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+  created_at: string;
+  user_roles: Tables<'user_roles'> | null;
+};
+
+const AdminUsers = () => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { data: users, isLoading, error } = useQuery({
+    queryKey: ['admin-users'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          full_name,
+          created_at,
+          user_roles (
+            id,
+            role,
+            created_at
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data as UserWithRole[];
+    },
+  });
+
+  const updateRoleMutation = useMutation({
+    mutationFn: async ({ userId, newRole }: { userId: string; newRole: 'admin' | 'moderator' | 'user' }) => {
+      // First check if user already has a role
+      const { data: existingRole } = await supabase
+        .from('user_roles')
+        .select('id')
+        .eq('user_id', userId)
+        .single();
+
+      if (existingRole) {
+        // Update existing role
+        const { error } = await supabase
+          .from('user_roles')
+          .update({ role: newRole })
+          .eq('user_id', userId);
+
+        if (error) throw error;
+      } else {
+        // Insert new role
+        const { error } = await supabase
+          .from('user_roles')
+          .insert({ user_id: userId, role: newRole });
+
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      toast({
+        title: "Success",
+        description: "User role updated successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update user role",
+        variant: "destructive",
+      });
+      console.error('Update role error:', error);
+    },
+  });
+
+  const handleRoleChange = (userId: string, newRole: 'admin' | 'moderator' | 'user') => {
+    updateRoleMutation.mutate({ userId, newRole });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <p className="text-destructive">Error loading users: {error.message}</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold">Manage Users</h1>
+        <p className="text-muted-foreground">Assign roles and manage user permissions</p>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>All Users ({users?.length || 0})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {users && users.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>User ID</TableHead>
+                  <TableHead>Current Role</TableHead>
+                  <TableHead>Joined</TableHead>
+                  <TableHead>Change Role</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {users.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell className="font-medium">
+                      {user.full_name || 'No Name'}
+                    </TableCell>
+                    <TableCell className="font-mono text-sm">
+                      {user.id.slice(0, 8)}...
+                    </TableCell>
+                    <TableCell>
+                      <Badge 
+                        variant={
+                          user.user_roles?.role === 'admin' 
+                            ? 'destructive' 
+                            : user.user_roles?.role === 'moderator'
+                            ? 'default'
+                            : 'secondary'
+                        }
+                      >
+                        {user.user_roles?.role || 'user'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {new Date(user.created_at).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <Select
+                        value={user.user_roles?.role || 'user'}
+                        onValueChange={(value: 'admin' | 'moderator' | 'user') => 
+                          handleRoleChange(user.id, value)
+                        }
+                        disabled={updateRoleMutation.isPending}
+                      >
+                        <SelectTrigger className="w-32">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="user">User</SelectItem>
+                          <SelectItem value="moderator">Moderator</SelectItem>
+                          <SelectItem value="admin">Admin</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">No users found</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default AdminUsers;
