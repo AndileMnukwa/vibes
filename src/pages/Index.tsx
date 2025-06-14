@@ -1,6 +1,8 @@
+
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserRole } from '@/hooks/useUserRole';
 import Layout from '@/components/layout/Layout';
 import EventsGrid from '@/components/events/EventsGrid';
 import SearchBar from '@/components/search/SearchBar';
@@ -11,6 +13,7 @@ import { EnhancedEventsGrid } from '@/components/events/EnhancedEventsGrid';
 
 const Index = () => {
   const { user, loading } = useAuth();
+  const { isAdmin, loading: roleLoading } = useUserRole();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -19,7 +22,7 @@ const Index = () => {
     }
   }, [user, loading, navigate]);
 
-  if (loading) {
+  if (loading || roleLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -51,10 +54,13 @@ const Index = () => {
             <SearchBar />
           </div>
           
-          <Button size="lg" className="bg-purple-600 hover:bg-purple-700">
-            <Plus className="mr-2 h-4 w-4" />
-            Create Event
-          </Button>
+          {/* Only show Create Event button for admins */}
+          {isAdmin && (
+            <Button size="lg" className="bg-purple-600 hover:bg-purple-700">
+              <Plus className="mr-2 h-4 w-4" />
+              Create Event
+            </Button>
+          )}
         </div>
 
         {/* Events Section */}

@@ -1,8 +1,10 @@
+
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { Calendar, LogOut, User, Bell } from 'lucide-react';
+import { useUserRole } from '@/hooks/useUserRole';
+import { Calendar, LogOut, User, Bell, Plus } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +18,7 @@ import { LocationSelector } from '@/components/location/LocationSelector';
 
 const Header = () => {
   const { user, signOut } = useAuth();
+  const { isAdmin } = useUserRole();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -88,6 +91,14 @@ const Header = () => {
           <ThemeToggle />
           {user ? (
             <>
+              {/* Admin Create Event Button */}
+              {isAdmin && (
+                <Button variant="ghost" size="sm" className="text-purple-600 hover:text-purple-700">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Event
+                </Button>
+              )}
+              
               <Button variant="ghost" size="sm">
                 <Bell className="h-4 w-4" />
               </Button>
@@ -107,6 +118,15 @@ const Header = () => {
                     <User className="mr-2 h-4 w-4" />
                     <span>Profile</span>
                   </DropdownMenuItem>
+                  {isAdmin && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => navigate('/admin/events')}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        <span>Manage Events</span>
+                      </DropdownMenuItem>
+                    </>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut}>
                     <LogOut className="mr-2 h-4 w-4" />
