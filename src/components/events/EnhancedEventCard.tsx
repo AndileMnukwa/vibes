@@ -13,6 +13,7 @@ import { EventCardActions } from './EventCardActions';
 type LocalEvent = Tables<'events'> & {
   categories: Tables<'categories'> | null;
   profiles: Tables<'profiles'> | null;
+  organizer_role?: 'admin' | 'moderator' | 'user' | null;
 };
 
 interface EnhancedEventCardProps {
@@ -44,6 +45,7 @@ export function EnhancedEventCard({ event, isExternal }: EnhancedEventCardProps)
   const location = event.location;
   const title = event.title;
   const description = 'short_description' in event ? event.short_description : event.description;
+  const isAdminCreated = !isExternal && 'organizer_role' in event && event.organizer_role === 'admin';
 
   return (
     <motion.div
@@ -55,6 +57,7 @@ export function EnhancedEventCard({ event, isExternal }: EnhancedEventCardProps)
           imageUrl={event.image_url}
           title={title}
           isExternal={isExternal}
+          isAdminCreated={isAdminCreated}
         />
         
         <EventCardHeader

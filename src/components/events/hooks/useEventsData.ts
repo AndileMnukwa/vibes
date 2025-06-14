@@ -11,6 +11,7 @@ import type { ExternalEventSource } from '@/types/external-events';
 type Event = Tables<'events'> & {
   categories: Tables<'categories'> | null;
   profiles: Tables<'profiles'> | null;
+  organizer_role?: 'admin' | 'moderator' | 'user' | null;
 };
 
 export function useEventsData() {
@@ -26,17 +27,18 @@ export function useEventsData() {
   console.log('useEventsData - userLocation:', userLocation);
   console.log('useEventsData - filters:', { searchQuery, selectedCategory, dateFilter, locationFilter });
 
-  // Fetch local events (always enabled, doesn't depend on location)
+  // Fetch local events with organizer role information
   const { data: localEvents, isLoading: localLoading, error: localError } = useQuery({
     queryKey: ['events', debouncedSearchQuery, selectedCategory, dateFilter, locationFilter],
     queryFn: async () => {
-      console.log('Fetching local events...');
+      console.log('Fetching local events with organizer roles...');
       let query = supabase
         .from('events')
         .select(`
           *,
           categories (*),
-          profiles (*)
+          profiles (*),
+          user_roles!events_organizer_id_fkey (role)
         `)
         .eq('status', 'published')
         .order('event_date', { ascending: true });
@@ -91,8 +93,17 @@ export function useEventsData() {
         console.error('Error fetching local events:', error);
         throw error;
       }
-      console.log('Local events fetched:', data?.length || 0);
-      return data as Event[];
+
+      // Transform the data to include organizer role
+      const eventsWithRoles = data?.map(event => ({
+        ...event,
+        organizer_role: Array.isArray(event.user_roles) && event.user_roles.length > 0 
+          ? event.user_roles[0].role 
+          : 'user'
+      })) || [];
+
+      console.log('Local events fetched with roles:', eventsWithRoles.length);
+      return eventsWithRoles as Event[];
     },
   });
 
