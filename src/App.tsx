@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import EventDetail from "./pages/EventDetail";
 import Profile from "./pages/Profile";
+import Calendar from "./pages/Calendar";
 import NotFound from "./pages/NotFound";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminEvents from "./pages/admin/AdminEvents";
@@ -35,6 +36,7 @@ const App = () => (
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/events/:id" element={<EventDetail />} />
                   <Route path="/profile" element={<Profile />} />
+                  <Route path="/calendar" element={<Calendar />} />
                   <Route path="/admin" element={<AdminLayout />}>
                     <Route path="events" element={<AdminEvents />} />
                     <Route path="create-event" element={<AdminCreateEvent />} />
