@@ -12,7 +12,8 @@ import {
   DollarSign, 
   ExternalLink,
   Clock,
-  Star
+  Star,
+  Image as ImageIcon
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { Tables } from '@/integrations/supabase/types';
@@ -52,6 +53,7 @@ export function EnhancedEventCard({ event, isExternal }: EnhancedEventCardProps)
   const location = event.location;
   const title = event.title;
   const description = 'short_description' in event ? event.short_description : event.description;
+  const hasImage = event.image_url && event.image_url.trim() !== '';
 
   return (
     <motion.div
@@ -59,14 +61,23 @@ export function EnhancedEventCard({ event, isExternal }: EnhancedEventCardProps)
       transition={{ duration: 0.2 }}
     >
       <Card className="h-full cursor-pointer hover:shadow-lg transition-shadow duration-300 overflow-hidden">
-        {/* Event Image */}
-        {event.image_url && (
+        {/* Event Image or Placeholder */}
+        {hasImage ? (
           <div className="relative h-48 overflow-hidden">
             <img 
               src={event.image_url} 
               alt={title}
               className="w-full h-full object-cover"
             />
+            {isExternal && (
+              <Badge className="absolute top-3 right-3 bg-blue-600">
+                External
+              </Badge>
+            )}
+          </div>
+        ) : (
+          <div className="relative h-48 bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center">
+            <ImageIcon className="h-12 w-12 text-muted-foreground/50" />
             {isExternal && (
               <Badge className="absolute top-3 right-3 bg-blue-600">
                 External
