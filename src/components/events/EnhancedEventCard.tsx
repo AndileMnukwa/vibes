@@ -49,47 +49,54 @@ export function EnhancedEventCard({ event, isExternal }: EnhancedEventCardProps)
 
   return (
     <motion.div
-      whileHover={{ y: -4 }}
-      transition={{ duration: 0.2 }}
+      whileHover={{ y: -8, scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+      className="group"
     >
-      <Card className="h-full cursor-pointer hover:shadow-lg transition-shadow duration-300 overflow-hidden">
-        <EventCardImage
-          imageUrl={event.image_url}
-          title={title}
-          isExternal={isExternal}
-          isAdminCreated={isAdminCreated}
-        />
+      <Card className="h-full cursor-pointer overflow-hidden bg-white/70 backdrop-blur-sm border border-white/20 shadow-lg hover:shadow-2xl transition-all duration-500 rounded-2xl">
+        {/* Hover Glow Effect */}
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl" />
         
-        <EventCardHeader
-          title={title}
-          eventDate={eventDate}
-          endDate={endDate}
-          isExternal={isExternal}
-          onClick={handleClick}
-        />
+        <div className="relative">
+          <EventCardImage
+            imageUrl={event.image_url}
+            title={title}
+            isExternal={isExternal}
+            isAdminCreated={isAdminCreated}
+          />
+          
+          <EventCardHeader
+            title={title}
+            eventDate={eventDate}
+            endDate={endDate}
+            isExternal={isExternal}
+            onClick={handleClick}
+          />
 
-        <EventCardContent
-          event={event}
-          isExternal={isExternal}
-          description={description}
-          location={location}
-          price={price}
-          capacity={capacity}
-          onClick={handleClick}
-        />
+          <EventCardContent
+            event={event}
+            isExternal={isExternal}
+            description={description}
+            location={location}
+            price={price}
+            capacity={capacity}
+            onClick={handleClick}
+          />
 
-        <EventCardActions
-          event={{
-            title,
-            description: description || '',
-            location,
-            event_date: event.event_date,
-            end_date: endDate?.toISOString() || null,
-          }}
-          isExternal={isExternal}
-          onAddToCalendar={handleAddToCalendar}
-          onClick={handleClick}
-        />
+          <EventCardActions
+            event={{
+              title,
+              description: description || '',
+              location,
+              event_date: event.event_date,
+              end_date: endDate?.toISOString() || null,
+            }}
+            isExternal={isExternal}
+            onAddToCalendar={handleAddToCalendar}
+            onClick={handleClick}
+          />
+        </div>
       </Card>
     </motion.div>
   );
