@@ -1,9 +1,12 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { DollarSign, Users } from 'lucide-react';
+import { DollarSign, Users, CheckCircle } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useEventRegistration } from '@/hooks/useEventRegistration';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Event = Tables<'events'> & {
@@ -16,6 +19,38 @@ interface EventDetailSidebarProps {
 }
 
 export const EventDetailSidebar = ({ event }: EventDetailSidebarProps) => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { isRegistered, isLoading, register, unregister } = useEventRegistration(event.id);
+
+  const handleRegistrationClick = () => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+
+    if (isRegistered) {
+      unregister();
+    } else {
+      register();
+    }
+  };
+
+  const getButtonText = () => {
+    if (!user) return 'Sign In to Register';
+    if (isLoading) return 'Processing...';
+    if (isRegistered) return 'Registered';
+    return event.ticket_price && event.ticket_price > 0 ? 'Buy Ticket' : 'Register Free';
+  };
+
+  const getButtonVariant = () => {
+    if (isRegistered) return 'outline' as const;
+    return 'default' as const;
+  };
+
+  // Check if event is in the past
+  const isEventPast = new Date(event.event_date) < new Date();
+
   return (
     <div className="space-y-6">
       {/* Ticket Info */}
@@ -58,9 +93,30 @@ export const EventDetailSidebar = ({ event }: EventDetailSidebarProps) => {
 
           <Separator />
 
-          <Button className="w-full" size="lg">
-            {event.ticket_price && event.ticket_price > 0 ? 'Buy Ticket' : 'Register Free'}
+          <Button 
+            className="w-full" 
+            size="lg" 
+            onClick={handleRegistrationClick}
+            disabled={isLoading || isEventPast}
+            variant={getButtonVariant()}
+          >
+            {isRegistered && (
+              <CheckCircle className="mr-2 h-4 w-4" />
+            )}
+            {isEventPast ? 'Event Ended' : getButtonText()}
           </Button>
+
+          {isRegistered && !isEventPast && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="w-full text-red-600 hover:text-red-700"
+              onClick={() => unregister()}
+              disabled={isLoading}
+            >
+              Unregister
+            </Button>
+          )}
         </CardContent>
       </Card>
 
