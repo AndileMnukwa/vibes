@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Star, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { SentimentIndicator } from './SentimentIndicator';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Review = Tables<'reviews'> & {
@@ -105,17 +106,25 @@ export const ReviewCard = ({ review }: ReviewCardProps) => {
       <CardContent className="pt-6">
         <div className="space-y-4">
           <div className="flex items-start justify-between">
-            <div>
-              <h4 className="font-semibold">{review.title}</h4>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-sm text-muted-foreground">by {authorName}</span>
-                <span className="text-sm text-muted-foreground">•</span>
-                <span className="text-sm text-muted-foreground">{createdDate}</span>
-                {review.verified_attendance && (
-                  <Badge variant="outline" className="text-xs">
-                    Verified Attendee
-                  </Badge>
-                )}
+            <div className="flex-1">
+              <div className="flex items-start gap-2">
+                <div className="flex-1">
+                  <h4 className="font-semibold">{review.title}</h4>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-sm text-muted-foreground">by {authorName}</span>
+                    <span className="text-sm text-muted-foreground">•</span>
+                    <span className="text-sm text-muted-foreground">{createdDate}</span>
+                    {review.verified_attendance && (
+                      <Badge variant="outline" className="text-xs">
+                        Verified Attendee
+                      </Badge>
+                    )}
+                    <SentimentIndicator 
+                      sentiment={review.sentiment as 'positive' | 'negative' | 'neutral' | null}
+                      confidence={review.sentiment_confidence}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-1">
@@ -133,6 +142,13 @@ export const ReviewCard = ({ review }: ReviewCardProps) => {
           </div>
 
           <p className="text-sm leading-relaxed">{review.content}</p>
+
+          {review.ai_summary && (
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <h5 className="text-sm font-medium text-blue-900 mb-1">AI Summary</h5>
+              <p className="text-sm text-blue-800">{review.ai_summary}</p>
+            </div>
+          )}
 
           {(review.atmosphere_rating || review.organization_rating || review.value_rating) && (
             <div className="space-y-2 p-3 bg-muted/50 rounded-lg">

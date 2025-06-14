@@ -238,6 +238,7 @@ export type Database = {
       }
       reviews: {
         Row: {
+          ai_summary: string | null
           atmosphere_rating: number | null
           content: string
           created_at: string
@@ -247,6 +248,8 @@ export type Database = {
           images: string[] | null
           organization_rating: number | null
           rating: number
+          sentiment: string | null
+          sentiment_confidence: number | null
           sentiment_score: number | null
           status: Database["public"]["Enums"]["review_status"] | null
           title: string
@@ -256,6 +259,7 @@ export type Database = {
           verified_attendance: boolean | null
         }
         Insert: {
+          ai_summary?: string | null
           atmosphere_rating?: number | null
           content: string
           created_at?: string
@@ -265,6 +269,8 @@ export type Database = {
           images?: string[] | null
           organization_rating?: number | null
           rating: number
+          sentiment?: string | null
+          sentiment_confidence?: number | null
           sentiment_score?: number | null
           status?: Database["public"]["Enums"]["review_status"] | null
           title: string
@@ -274,6 +280,7 @@ export type Database = {
           verified_attendance?: boolean | null
         }
         Update: {
+          ai_summary?: string | null
           atmosphere_rating?: number | null
           content?: string
           created_at?: string
@@ -283,6 +290,8 @@ export type Database = {
           images?: string[] | null
           organization_rating?: number | null
           rating?: number
+          sentiment?: string | null
+          sentiment_confidence?: number | null
           sentiment_score?: number | null
           status?: Database["public"]["Enums"]["review_status"] | null
           title?: string

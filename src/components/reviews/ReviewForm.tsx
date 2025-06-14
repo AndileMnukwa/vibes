@@ -1,261 +1,203 @@
 
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Star } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Star, X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-
-const reviewSchema = z.object({
-  title: z.string().min(5, 'Title must be at least 5 characters'),
-  content: z.string().min(20, 'Review must be at least 20 characters'),
-  rating: z.number().min(1).max(5),
-  atmosphere_rating: z.number().min(1).max(5).optional(),
-  organization_rating: z.number().min(1).max(5).optional(),
-  value_rating: z.number().min(1).max(5).optional(),
-});
-
-type ReviewFormData = z.infer<typeof reviewSchema>;
+import { useSentimentAnalysis } from '@/hooks/useSentimentAnalysis';
 
 interface ReviewFormProps {
   eventId: string;
-  onSuccess?: () => void;
+  onSuccess: () => void;
 }
-
-interface StarRatingProps {
-  value: number;
-  onChange: (value: number) => void;
-  label: string;
-}
-
-const StarRating = ({ value, onChange, label }: StarRatingProps) => {
-  return (
-    <div className="flex items-center gap-2">
-      <span className="text-sm font-medium w-24">{label}:</span>
-      <div className="flex gap-1">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <button
-            key={star}
-            type="button"
-            onClick={() => onChange(star)}
-            className="focus:outline-none"
-          >
-            <Star
-              className={`h-5 w-5 ${
-                star <= value
-                  ? 'fill-yellow-400 text-yellow-400'
-                  : 'text-gray-300'
-              }`}
-            />
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-};
 
 export const ReviewForm = ({ eventId, onSuccess }: ReviewFormProps) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const sentimentAnalysis = useSentimentAnalysis();
 
-  const form = useForm<ReviewFormData>({
-    resolver: zodResolver(reviewSchema),
-    defaultValues: {
-      title: '',
-      content: '',
-      rating: 5,
-      atmosphere_rating: 5,
-      organization_rating: 5,
-      value_rating: 5,
-    },
+  const [formData, setFormData] = useState({
+    title: '',
+    content: '',
+    rating: 0,
+    atmosphereRating: 0,
+    organizationRating: 0,
+    valueRating: 0,
   });
 
   const submitReview = useMutation({
-    mutationFn: async (data: ReviewFormData) => {
+    mutationFn: async () => {
       if (!user) throw new Error('User not authenticated');
+      
+      if (!formData.title || !formData.content || formData.rating === 0) {
+        throw new Error('Please fill in all required fields');
+      }
 
-      const reviewData = {
-        event_id: eventId,
-        user_id: user.id,
-        title: data.title,
-        content: data.content,
-        rating: data.rating,
-        atmosphere_rating: data.atmosphere_rating || null,
-        organization_rating: data.organization_rating || null,
-        value_rating: data.value_rating || null,
-      };
-
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('reviews')
-        .insert(reviewData);
+        .insert({
+          event_id: eventId,
+          user_id: user.id,
+          title: formData.title,
+          content: formData.content,
+          rating: formData.rating,
+          atmosphere_rating: formData.atmosphereRating || null,
+          organization_rating: formData.organizationRating || null,
+          value_rating: formData.valueRating || null,
+        })
+        .select()
+        .single();
 
       if (error) throw error;
+      return data;
     },
-    onSuccess: () => {
-      toast({
-        title: 'Review submitted!',
-        description: 'Your review has been submitted and is pending approval.',
-      });
-      form.reset();
+    onSuccess: async (reviewData) => {
+      // Trigger sentiment analysis for the new review
+      try {
+        await sentimentAnalysis.mutateAsync({
+          reviewId: reviewData.id,
+          title: formData.title,
+          content: formData.content,
+        });
+      } catch (error) {
+        console.error('Sentiment analysis failed:', error);
+        // Don't fail the review submission if sentiment analysis fails
+      }
+
       queryClient.invalidateQueries({ queryKey: ['reviews', eventId] });
-      onSuccess?.();
+      toast({
+        title: 'Review submitted',
+        description: 'Thank you for your feedback! AI analysis is being processed.',
+      });
+      onSuccess();
     },
     onError: (error: any) => {
       toast({
         title: 'Error submitting review',
-        description: error.message || 'Please try again later.',
+        description: error.message,
         variant: 'destructive',
       });
     },
   });
 
-  const onSubmit = (data: ReviewFormData) => {
-    submitReview.mutate(data);
+  const StarRating = ({ 
+    value, 
+    onChange, 
+    label 
+  }: { 
+    value: number; 
+    onChange: (rating: number) => void; 
+    label: string;
+  }) => {
+    return (
+      <div className="space-y-2">
+        <Label className="text-sm font-medium">{label}</Label>
+        <div className="flex gap-1">
+          {[1, 2, 3, 4, 5].map((star) => (
+            <button
+              key={star}
+              type="button"
+              onClick={() => onChange(star)}
+              className="p-1 hover:scale-110 transition-transform"
+            >
+              <Star
+                className={`h-6 w-6 ${
+                  star <= value
+                    ? 'fill-yellow-400 text-yellow-400'
+                    : 'text-gray-300 hover:text-yellow-200'
+                }`}
+              />
+            </button>
+          ))}
+        </div>
+      </div>
+    );
   };
 
-  if (!user) {
-    return (
-      <Card>
-        <CardContent className="pt-6">
-          <p className="text-center text-muted-foreground">
-            Please sign in to write a review.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    submitReview.mutate();
+  };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Write a Review</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle>Write a Review</CardTitle>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onSuccess}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Review Title</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Summarize your experience..." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="title">Review Title *</Label>
+            <Input
+              id="title"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              placeholder="Summarize your experience..."
+              required
             />
+          </div>
 
-            <FormField
-              control={form.control}
-              name="content"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Your Review</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Share your detailed experience..."
-                      rows={4}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+          <div className="space-y-2">
+            <Label htmlFor="content">Review Content *</Label>
+            <Textarea
+              id="content"
+              value={formData.content}
+              onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+              placeholder="Share your detailed experience..."
+              rows={4}
+              required
             />
+          </div>
 
-            <div className="space-y-3">
-              <FormField
-                control={form.control}
-                name="rating"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <StarRating
-                        label="Overall"
-                        value={field.value}
-                        onChange={field.onChange}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          <StarRating
+            value={formData.rating}
+            onChange={(rating) => setFormData({ ...formData, rating })}
+            label="Overall Rating *"
+          />
 
-              <FormField
-                control={form.control}
-                name="atmosphere_rating"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <StarRating
-                        label="Atmosphere"
-                        value={field.value || 5}
-                        onChange={field.onChange}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <StarRating
+              value={formData.atmosphereRating}
+              onChange={(rating) => setFormData({ ...formData, atmosphereRating: rating })}
+              label="Atmosphere"
+            />
+            <StarRating
+              value={formData.organizationRating}
+              onChange={(rating) => setFormData({ ...formData, organizationRating: rating })}
+              label="Organization"
+            />
+            <StarRating
+              value={formData.valueRating}
+              onChange={(rating) => setFormData({ ...formData, valueRating: rating })}
+              label="Value"
+            />
+          </div>
 
-              <FormField
-                control={form.control}
-                name="organization_rating"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <StarRating
-                        label="Organization"
-                        value={field.value || 5}
-                        onChange={field.onChange}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="value_rating"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <StarRating
-                        label="Value"
-                        value={field.value || 5}
-                        onChange={field.onChange}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <Button 
-              type="submit" 
-              disabled={submitReview.isPending}
-              className="w-full"
-            >
-              {submitReview.isPending ? 'Submitting...' : 'Submit Review'}
-            </Button>
-          </form>
-        </Form>
+          <Button 
+            type="submit" 
+            disabled={submitReview.isPending || sentimentAnalysis.isPending}
+            className="w-full"
+          >
+            {submitReview.isPending ? 'Submitting...' : 
+             sentimentAnalysis.isPending ? 'Processing...' : 
+             'Submit Review'}
+          </Button>
+        </form>
       </CardContent>
     </Card>
   );

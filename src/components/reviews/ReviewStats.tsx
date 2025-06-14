@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Star } from 'lucide-react';
+import { Star, Smile, Frown, Meh } from 'lucide-react';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Review = Tables<'reviews'>;
@@ -34,6 +34,13 @@ export const ReviewStats = ({ reviews }: ReviewStatsProps) => {
   const ratingCounts = [5, 4, 3, 2, 1].map(rating => 
     reviews.filter(review => review.rating === rating).length
   );
+
+  // Sentiment distribution
+  const sentimentCounts = {
+    positive: reviews.filter(r => r.sentiment === 'positive').length,
+    negative: reviews.filter(r => r.sentiment === 'negative').length,
+    neutral: reviews.filter(r => r.sentiment === 'neutral').length,
+  };
 
   // Detailed ratings averages
   const atmosphereReviews = reviews.filter(r => r.atmosphere_rating);
@@ -98,6 +105,57 @@ export const ReviewStats = ({ reviews }: ReviewStatsProps) => {
             ))}
           </div>
         </div>
+
+        {/* Sentiment Analysis */}
+        {(sentimentCounts.positive > 0 || sentimentCounts.negative > 0 || sentimentCounts.neutral > 0) && (
+          <div className="space-y-3 pt-4 border-t">
+            <h4 className="font-medium flex items-center gap-2">
+              <Smile className="h-4 w-4" />
+              Sentiment Analysis
+            </h4>
+            <div className="space-y-2">
+              {sentimentCounts.positive > 0 && (
+                <div className="flex items-center gap-2">
+                  <Smile className="h-4 w-4 text-green-600" />
+                  <span className="text-sm w-16">Positive</span>
+                  <Progress 
+                    value={(sentimentCounts.positive / totalReviews) * 100} 
+                    className="flex-1 h-2"
+                  />
+                  <span className="text-sm text-muted-foreground w-8">
+                    {sentimentCounts.positive}
+                  </span>
+                </div>
+              )}
+              {sentimentCounts.neutral > 0 && (
+                <div className="flex items-center gap-2">
+                  <Meh className="h-4 w-4 text-gray-600" />
+                  <span className="text-sm w-16">Neutral</span>
+                  <Progress 
+                    value={(sentimentCounts.neutral / totalReviews) * 100} 
+                    className="flex-1 h-2"
+                  />
+                  <span className="text-sm text-muted-foreground w-8">
+                    {sentimentCounts.neutral}
+                  </span>
+                </div>
+              )}
+              {sentimentCounts.negative > 0 && (
+                <div className="flex items-center gap-2">
+                  <Frown className="h-4 w-4 text-red-600" />
+                  <span className="text-sm w-16">Negative</span>
+                  <Progress 
+                    value={(sentimentCounts.negative / totalReviews) * 100} 
+                    className="flex-1 h-2"
+                  />
+                  <span className="text-sm text-muted-foreground w-8">
+                    {sentimentCounts.negative}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Detailed Ratings */}
         {(averageAtmosphere > 0 || averageOrganization > 0 || averageValue > 0) && (
