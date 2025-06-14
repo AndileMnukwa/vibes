@@ -26,7 +26,6 @@ import type { Tables } from '@/integrations/supabase/types';
 type UserWithRole = {
   id: string;
   full_name: string | null;
-  email: string | null;
   created_at: string;
   user_roles: Tables<'user_roles'> | null;
 };
@@ -38,22 +37,31 @@ const AdminUsers = () => {
   const { data: users, isLoading, error } = useQuery({
     queryKey: ['admin-users'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First get all profiles
+      const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select(`
-          id,
-          full_name,
-          created_at,
-          user_roles (
-            id,
-            role,
-            created_at
-          )
-        `)
+        .select('id, full_name, created_at')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return data as UserWithRole[];
+      if (profilesError) throw profilesError;
+
+      // Then get user roles for each profile
+      const usersWithRoles = await Promise.all(
+        profiles.map(async (profile) => {
+          const { data: userRole } = await supabase
+            .from('user_roles')
+            .select('*')
+            .eq('user_id', profile.id)
+            .single();
+
+          return {
+            ...profile,
+            user_roles: userRole
+          };
+        })
+      );
+
+      return usersWithRoles as UserWithRole[];
     },
   });
 
