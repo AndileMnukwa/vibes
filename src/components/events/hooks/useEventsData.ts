@@ -23,10 +23,14 @@ export function useEventsData() {
     { id: '2', name: 'Meetup', type: 'meetup', enabled: true },
   ];
 
-  // Fetch local events
+  console.log('useEventsData - userLocation:', userLocation);
+  console.log('useEventsData - filters:', { searchQuery, selectedCategory, dateFilter, locationFilter });
+
+  // Fetch local events (always enabled, doesn't depend on location)
   const { data: localEvents, isLoading: localLoading, error: localError } = useQuery({
     queryKey: ['events', debouncedSearchQuery, selectedCategory, dateFilter, locationFilter],
     queryFn: async () => {
+      console.log('Fetching local events...');
       let query = supabase
         .from('events')
         .select(`
@@ -83,29 +87,51 @@ export function useEventsData() {
       }
 
       const { data, error } = await query;
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching local events:', error);
+        throw error;
+      }
+      console.log('Local events fetched:', data?.length || 0);
       return data as Event[];
     },
   });
 
-  // Fetch external events
-  const { data: externalEvents, isLoading: externalLoading } = useQuery({
+  // Fetch external events (only when location is available)
+  const { data: externalEvents, isLoading: externalLoading, error: externalError } = useQuery({
     queryKey: ['external-events', userLocation, distanceFilter, externalSources],
     queryFn: async () => {
-      if (!userLocation) return [];
-      return ExternalEventService.fetchExternalEvents(
-        userLocation,
-        distanceFilter.radius,
-        externalSources
-      );
+      console.log('Fetching external events...');
+      if (!userLocation) {
+        console.log('No user location, returning empty external events');
+        return [];
+      }
+      try {
+        const events = await ExternalEventService.fetchExternalEvents(
+          userLocation,
+          distanceFilter.radius,
+          externalSources
+        );
+        console.log('External events fetched:', events.length);
+        return events;
+      } catch (error) {
+        console.error('Error fetching external events:', error);
+        return []; // Return empty array instead of throwing
+      }
     },
-    enabled: !!userLocation,
+    enabled: true, // Always enabled, but returns empty array if no location
   });
+
+  const isLoading = localLoading || externalLoading;
+  const error = localError || externalError;
+
+  console.log('useEventsData - isLoading:', isLoading);
+  console.log('useEventsData - localEvents count:', localEvents?.length || 0);
+  console.log('useEventsData - externalEvents count:', externalEvents?.length || 0);
 
   return {
     localEvents: localEvents || [],
     externalEvents: externalEvents || [],
-    isLoading: localLoading || externalLoading,
-    error: localError,
+    isLoading,
+    error,
   };
 }

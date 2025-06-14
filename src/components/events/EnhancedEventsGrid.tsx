@@ -18,30 +18,54 @@ export function EnhancedEventsGrid() {
   const [sortBy, setSortBy] = useState<SortOption>('date');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
 
+  console.log('EnhancedEventsGrid rendering with filters:', { searchQuery, selectedCategory, dateFilter, locationFilter });
+
   const { localEvents, externalEvents, isLoading, error } = useEventsData();
+
+  console.log('EnhancedEventsGrid - Data state:', { 
+    localEventsCount: localEvents.length, 
+    externalEventsCount: externalEvents.length, 
+    isLoading, 
+    error 
+  });
 
   // Combined and sorted events
   const allEvents = useMemo(() => {
-    return sortEvents(localEvents, externalEvents, sortBy);
+    const sorted = sortEvents(localEvents, externalEvents, sortBy);
+    console.log('EnhancedEventsGrid - All events after sorting:', sorted.length);
+    return sorted;
   }, [localEvents, externalEvents, sortBy]);
 
   const hasFilters = Boolean(searchQuery || selectedCategory || dateFilter || locationFilter);
 
+  console.log('EnhancedEventsGrid - Component state:', { 
+    hasFilters, 
+    allEventsCount: allEvents.length, 
+    isLoading, 
+    error 
+  });
+
   if (isLoading) {
+    console.log('EnhancedEventsGrid - Showing loading skeleton');
     return <EventsGridSkeleton viewMode={viewMode} />;
   }
 
   if (error) {
+    console.error('EnhancedEventsGrid - Error state:', error);
     return (
       <div className="text-center py-8">
         <p className="text-muted-foreground">Error loading events. Please try again later.</p>
+        <p className="text-sm text-red-500 mt-2">Error: {error.message}</p>
       </div>
     );
   }
 
   if (!allEvents || allEvents.length === 0) {
+    console.log('EnhancedEventsGrid - Showing empty state');
     return <EventsGridEmpty hasFilters={hasFilters} />;
   }
+
+  console.log('EnhancedEventsGrid - Rendering events grid with', allEvents.length, 'events');
 
   return (
     <div className="space-y-6">

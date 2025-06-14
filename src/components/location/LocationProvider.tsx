@@ -29,6 +29,8 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
     unit: 'miles',
   });
 
+  console.log('LocationProvider - Current state:', { location, loading, error });
+
   return (
     <LocationContext.Provider
       value={{
