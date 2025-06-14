@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,6 +17,7 @@ const AuthForm = () => {
   const [fullName, setFullName] = useState('');
   const { signIn, signUp } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,6 +36,7 @@ const AuthForm = () => {
         title: "Welcome back!",
         description: "You've been signed in successfully.",
       });
+      navigate('/', { replace: true });
     }
     
     setLoading(false);
