@@ -89,13 +89,20 @@ export const ReviewForm = ({ eventId, onSuccess }: ReviewFormProps) => {
     mutationFn: async (data: ReviewFormData) => {
       if (!user) throw new Error('User not authenticated');
 
+      const reviewData = {
+        event_id: eventId,
+        user_id: user.id,
+        title: data.title,
+        content: data.content,
+        rating: data.rating,
+        atmosphere_rating: data.atmosphere_rating || null,
+        organization_rating: data.organization_rating || null,
+        value_rating: data.value_rating || null,
+      };
+
       const { error } = await supabase
         .from('reviews')
-        .insert({
-          event_id: eventId,
-          user_id: user.id,
-          ...data,
-        });
+        .insert(reviewData);
 
       if (error) throw error;
     },
