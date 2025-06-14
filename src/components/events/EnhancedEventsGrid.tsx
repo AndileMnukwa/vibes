@@ -25,7 +25,7 @@ export function EnhancedEventsGrid() {
     return sortEvents(localEvents, externalEvents, sortBy);
   }, [localEvents, externalEvents, sortBy]);
 
-  const hasFilters = searchQuery || selectedCategory || dateFilter || locationFilter;
+  const hasFilters = Boolean(searchQuery || selectedCategory || dateFilter || locationFilter);
 
   if (isLoading) {
     return <EventsGridSkeleton viewMode={viewMode} />;
