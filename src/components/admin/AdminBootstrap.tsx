@@ -50,7 +50,7 @@ export const AdminBootstrap = () => {
       });
       setIsSuccess(true);
       queryClient.invalidateQueries({ queryKey: ['existing-admins'] });
-      queryClient.invalidateQueries({ queryKey: ['user-role'] });
+      queryClient.invalidateQueries({ queryKey: ['user-role', user?.id] });
     },
     onError: (error: any) => {
       toast({
