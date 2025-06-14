@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { useDebounce } from 'use-debounce';
 import { supabase } from '@/integrations/supabase/client';
@@ -37,8 +36,7 @@ export function useEventsData() {
         .select(`
           *,
           categories (*),
-          profiles (*),
-          user_roles!events_organizer_id_fkey (role)
+          profiles (*)
         `)
         .eq('status', 'published')
         .order('event_date', { ascending: true });
@@ -88,19 +86,42 @@ export function useEventsData() {
           .lt('event_date', endDate.toISOString());
       }
 
-      const { data, error } = await query;
+      const { data: events, error } = await query;
       if (error) {
         console.error('Error fetching local events:', error);
         throw error;
       }
 
+      if (!events || events.length === 0) {
+        console.log('No events found');
+        return [];
+      }
+
+      // Get unique organizer IDs
+      const organizerIds = [...new Set(events.map(event => event.organizer_id))];
+
+      // Fetch roles for all organizers
+      const { data: userRoles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, role')
+        .in('user_id', organizerIds);
+
+      if (rolesError) {
+        console.error('Error fetching user roles:', rolesError);
+        // Continue without roles rather than failing completely
+      }
+
+      // Create a map of user_id to role for quick lookup
+      const roleMap = new Map();
+      userRoles?.forEach(userRole => {
+        roleMap.set(userRole.user_id, userRole.role);
+      });
+
       // Transform the data to include organizer role
-      const eventsWithRoles = data?.map(event => ({
+      const eventsWithRoles = events.map(event => ({
         ...event,
-        organizer_role: Array.isArray(event.user_roles) && event.user_roles.length > 0 
-          ? event.user_roles[0].role 
-          : 'user'
-      })) || [];
+        organizer_role: roleMap.get(event.organizer_id) || 'user'
+      }));
 
       console.log('Local events fetched with roles:', eventsWithRoles.length);
       return eventsWithRoles as Event[];
