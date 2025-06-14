@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { EnhancedEventsGrid } from '@/components/events/EnhancedEventsGrid';
 import { AdminBootstrap } from '@/components/admin/AdminBootstrap';
+import { RecommendationsSection } from '@/components/recommendations/RecommendationsSection';
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -71,10 +71,15 @@ const Index = () => {
           )}
         </div>
 
+        {/* Personalized Recommendations Section */}
+        <section className="mb-16">
+          <RecommendationsSection limit={6} />
+        </section>
+
         {/* Events Section */}
         <section id="events-section">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-semibold">Upcoming Events</h2>
+            <h2 className="text-2xl font-semibold">All Events</h2>
             <Button variant="outline">View All</Button>
           </div>
           
