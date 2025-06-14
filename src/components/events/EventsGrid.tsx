@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import EventCard from './EventCard';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Card } from '@/components/ui/card';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Event = Tables<'events'> & {
