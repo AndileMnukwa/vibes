@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -12,6 +11,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { LocationSelector } from '@/components/location/LocationSelector';
 
 const Header = () => {
   const { user, signOut } = useAuth();
@@ -32,7 +33,7 @@ const Header = () => {
   };
 
   return (
-    <header className="border-b bg-white/80 backdrop-blur-md sticky top-0 z-50">
+    <header className="border-b bg-background/80 backdrop-blur-md sticky top-0 z-50">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <div className="flex items-center space-x-2 cursor-pointer" onClick={() => navigate('/')}>
           <Calendar className="h-8 w-8 text-purple-600" />
@@ -83,6 +84,8 @@ const Header = () => {
         </nav>
 
         <div className="flex items-center space-x-4">
+          <LocationSelector />
+          <ThemeToggle />
           {user ? (
             <>
               <Button variant="ghost" size="sm">
