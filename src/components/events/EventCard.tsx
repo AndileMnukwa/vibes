@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,10 +17,15 @@ interface EventCardProps {
 }
 
 const EventCard = ({ event }: EventCardProps) => {
+  const navigate = useNavigate();
   const eventDate = new Date(event.event_date);
   
+  const handleViewDetails = () => {
+    navigate(`/events/${event.id}`);
+  };
+
   return (
-    <Card className="hover:shadow-lg transition-shadow">
+    <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={handleViewDetails}>
       <CardHeader>
         <div className="flex justify-between items-start">
           <CardTitle className="text-lg line-clamp-2">{event.title}</CardTitle>
@@ -55,9 +61,15 @@ const EventCard = ({ event }: EventCardProps) => {
           </div>
         )}
         
-        {event.ticket_price && event.ticket_price > 0 && (
+        {event.ticket_price !== null && event.ticket_price > 0 && (
           <div className="text-lg font-semibold text-green-600">
             ${event.ticket_price}
+          </div>
+        )}
+
+        {event.ticket_price === 0 && (
+          <div className="text-lg font-semibold text-green-600">
+            Free
           </div>
         )}
       </CardContent>
@@ -67,7 +79,15 @@ const EventCard = ({ event }: EventCardProps) => {
           <Star className="h-4 w-4 text-yellow-400 mr-1" />
           <span className="text-sm text-muted-foreground">No reviews yet</span>
         </div>
-        <Button size="sm">View Details</Button>
+        <Button 
+          size="sm" 
+          onClick={(e) => {
+            e.stopPropagation();
+            handleViewDetails();
+          }}
+        >
+          View Details
+        </Button>
       </CardFooter>
     </Card>
   );

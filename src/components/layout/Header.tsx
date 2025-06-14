@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { Calendar, LogOut, User, Bell } from 'lucide-react';
@@ -14,29 +15,71 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 const Header = () => {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSignOut = async () => {
     await signOut();
+    navigate('/auth');
+  };
+
+  const handleNavigation = (path: string) => {
+    navigate(path);
+  };
+
+  const isActive = (path: string) => {
+    return location.pathname === path;
   };
 
   return (
     <header className="border-b bg-white/80 backdrop-blur-md sticky top-0 z-50">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 cursor-pointer" onClick={() => navigate('/')}>
           <Calendar className="h-8 w-8 text-purple-600" />
           <h1 className="text-2xl font-bold text-purple-600">VibeCatcher</h1>
         </div>
 
         <nav className="hidden md:flex items-center space-x-6">
-          <a href="#events" className="text-gray-600 hover:text-purple-600 transition-colors">
+          <button
+            onClick={() => handleNavigation('/')}
+            className={`transition-colors ${
+              isActive('/') 
+                ? 'text-purple-600 font-medium' 
+                : 'text-gray-600 hover:text-purple-600'
+            }`}
+          >
             Events
-          </a>
-          <a href="#reviews" className="text-gray-600 hover:text-purple-600 transition-colors">
+          </button>
+          <button
+            onClick={() => {
+              const reviewsSection = document.getElementById('reviews-section');
+              if (reviewsSection) {
+                reviewsSection.scrollIntoView({ behavior: 'smooth' });
+              }
+            }}
+            className="text-gray-600 hover:text-purple-600 transition-colors"
+          >
             Reviews
-          </a>
-          <a href="#categories" className="text-gray-600 hover:text-purple-600 transition-colors">
+          </button>
+          <button
+            onClick={() => {
+              const categoriesSection = document.getElementById('categories-section');
+              if (categoriesSection) {
+                categoriesSection.scrollIntoView({ behavior: 'smooth' });
+              } else {
+                navigate('/');
+                setTimeout(() => {
+                  const section = document.getElementById('categories-section');
+                  if (section) {
+                    section.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }, 100);
+              }
+            }}
+            className="text-gray-600 hover:text-purple-600 transition-colors"
+          >
             Categories
-          </a>
+          </button>
         </nav>
 
         <div className="flex items-center space-x-4">
@@ -57,7 +100,7 @@ const Header = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end">
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/profile')}>
                     <User className="mr-2 h-4 w-4" />
                     <span>Profile</span>
                   </DropdownMenuItem>
@@ -70,7 +113,7 @@ const Header = () => {
               </DropdownMenu>
             </>
           ) : (
-            <Button>Sign In</Button>
+            <Button onClick={() => navigate('/auth')}>Sign In</Button>
           )}
         </div>
       </div>
