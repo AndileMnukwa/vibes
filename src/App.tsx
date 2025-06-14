@@ -16,6 +16,7 @@ import AdminLayout from "./pages/admin/AdminLayout";
 import AdminEvents from "./pages/admin/AdminEvents";
 import AdminCreateEvent from "./pages/admin/AdminCreateEvent";
 import AdminEditEvent from "./pages/admin/AdminEditEvent";
+import AdminEventRegistrations from "./pages/admin/AdminEventRegistrations";
 import AdminUsers from "./pages/admin/AdminUsers";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import { LocationProvider } from "@/components/location/LocationProvider";
@@ -40,6 +41,7 @@ const App = () => (
                   <Route path="/calendar" element={<Calendar />} />
                   <Route path="/admin" element={<AdminLayout />}>
                     <Route path="events" element={<AdminEvents />} />
+                    <Route path="events/:id/registrations" element={<AdminEventRegistrations />} />
                     <Route path="create-event" element={<AdminCreateEvent />} />
                     <Route path="edit-event/:id" element={<AdminEditEvent />} />
                     <Route path="users" element={<AdminUsers />} />
