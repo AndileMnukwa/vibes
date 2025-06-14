@@ -1,17 +1,8 @@
-
 import React from 'react';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CalendarIntegrationComponent } from './CalendarIntegration';
+import { Calendar, MapPin, Users, Share2, MessageCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useEventSharing } from '@/hooks/useEventSharing';
-import { 
-  Calendar, 
-  MapPin, 
-  Clock, 
-  Heart,
-  MessageCircle,
-  Share2
-} from 'lucide-react';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Event = Tables<'events'> & {
@@ -25,94 +16,78 @@ interface EventDetailHeroProps {
 
 export const EventDetailHero = ({ event }: EventDetailHeroProps) => {
   const { handleWhatsAppShare, handleGeneralShare } = useEventSharing();
+
   const eventDate = new Date(event.event_date);
-  const endDate = event.end_date ? new Date(event.end_date) : null;
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
 
   return (
-    <div>
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex-1">
-          <h1 className="text-3xl font-bold mb-2">{event.title}</h1>
-          <div className="flex items-center gap-4 text-muted-foreground">
-            <div className="flex items-center">
-              <Calendar className="h-4 w-4 mr-1" />
-              {eventDate.toLocaleDateString()} at {eventDate.toLocaleTimeString([], { 
-                hour: '2-digit', 
-                minute: '2-digit' 
-              })}
-            </div>
-            {endDate && (
-              <div className="flex items-center">
-                <Clock className="h-4 w-4 mr-1" />
-                Until {endDate.toLocaleTimeString([], { 
-                  hour: '2-digit', 
-                  minute: '2-digit' 
-                })}
-              </div>
-            )}
+    <div className="space-y-6">
+      {/* Hero Image */}
+      {event.image_url && (
+        <div className="relative h-64 lg:h-80 rounded-lg overflow-hidden">
+          <img
+            src={event.image_url}
+            alt={event.title}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
+
+      {/* Event Header */}
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center gap-2">
+          {event.categories && (
+            <Badge
+              variant="secondary"
+              style={{ backgroundColor: event.categories.color + '20', color: event.categories.color }}
+            >
+              {event.categories.name}
+            </Badge>
+          )}
+          <div className="flex items-center text-sm text-muted-foreground">
+            <Calendar className="mr-1 h-4 w-4" />
+            {eventDate.toLocaleDateString()} at {formatTime(eventDate)}
+            {event.end_date && ` - ${formatTime(new Date(event.end_date))}`}
           </div>
         </div>
+
+        <h1 className="text-3xl lg:text-4xl font-bold">{event.title}</h1>
+
+        <div className="flex flex-wrap items-center gap-4 text-muted-foreground">
+          <div className="flex items-center">
+            <MapPin className="mr-1 h-4 w-4" />
+            {event.location}
+          </div>
+          {event.capacity && (
+            <div className="flex items-center">
+              <Users className="mr-1 h-4 w-4" />
+              Up to {event.capacity} people
+            </div>
+          )}
+        </div>
+
+        {/* Share Buttons */}
         <div className="flex gap-2">
-          <CalendarIntegrationComponent 
-            event={{
-              title: event.title,
-              description: event.description,
-              location: event.location,
-              event_date: event.event_date,
-              end_date: event.end_date,
-            }}
-          />
-          <Button variant="outline" size="sm">
-            <Heart className="h-4 w-4" />
-          </Button>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             size="sm"
             onClick={() => handleWhatsAppShare(event)}
-            className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
           >
-            <MessageCircle className="h-4 w-4 mr-1" />
-            WhatsApp
+            <MessageCircle className="mr-2 h-4 w-4" />
+            Share on WhatsApp
           </Button>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             size="sm"
             onClick={() => handleGeneralShare(event)}
           >
-            <Share2 className="h-4 w-4" />
+            <Share2 className="mr-2 h-4 w-4" />
+            Share
           </Button>
         </div>
-      </div>
-
-      {event.categories && (
-        <Badge 
-          variant="secondary"
-          style={{ 
-            backgroundColor: event.categories.color + '20', 
-            color: event.categories.color 
-          }}
-          className="mb-4"
-        >
-          {event.categories.name}
-        </Badge>
-      )}
-
-      <div className="flex items-center gap-4 text-sm text-muted-foreground mb-6">
-        <div className="flex items-center">
-          <MapPin className="h-4 w-4 mr-1" />
-          {event.location}
-        </div>
-        {event.capacity && (
-          <div className="flex items-center">
-            <Users className="h-4 w-4 mr-1" />
-            {event.capacity} spots
-          </div>
-        )}
-        {event.profiles && (
-          <div>
-            Organized by {event.profiles.full_name || event.profiles.username || 'Anonymous'}
-          </div>
-        )}
       </div>
     </div>
   );
