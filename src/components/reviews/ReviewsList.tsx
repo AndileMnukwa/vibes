@@ -1,0 +1,147 @@
+
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ReviewCard } from './ReviewCard';
+import { ReviewStats } from './ReviewStats';
+import { ReviewForm } from './ReviewForm';
+import { Skeleton } from '@/components/ui/skeleton';
+import { MessageSquarePlus } from 'lucide-react';
+import type { Tables } from '@/integrations/supabase/types';
+
+type Review = Tables<'reviews'> & {
+  profiles: Tables<'profiles'> | null;
+};
+
+interface ReviewsListProps {
+  eventId: string;
+}
+
+export const ReviewsList = ({ eventId }: ReviewsListProps) => {
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'highest' | 'lowest' | 'helpful'>('newest');
+
+  const { data: reviews = [], isLoading, error } = useQuery({
+    queryKey: ['reviews', eventId, sortBy],
+    queryFn: async () => {
+      let query = supabase
+        .from('reviews')
+        .select(`
+          *,
+          profiles (*)
+        `)
+        .eq('event_id', eventId)
+        .eq('status', 'approved'); // Only show approved reviews
+
+      // Apply sorting
+      switch (sortBy) {
+        case 'newest':
+          query = query.order('created_at', { ascending: false });
+          break;
+        case 'oldest':
+          query = query.order('created_at', { ascending: true });
+          break;
+        case 'highest':
+          query = query.order('rating', { ascending: false });
+          break;
+        case 'lowest':
+          query = query.order('rating', { ascending: true });
+          break;
+        case 'helpful':
+          query = query.order('helpful_count', { ascending: false });
+          break;
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data as Review[];
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-48 w-full" />
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-32 w-full" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <p className="text-center text-muted-foreground">
+            Failed to load reviews. Please try again later.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Review Statistics */}
+      <ReviewStats reviews={reviews} />
+
+      {/* Write Review Button/Form */}
+      {!showReviewForm ? (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <Button 
+                onClick={() => setShowReviewForm(true)}
+                className="gap-2"
+              >
+                <MessageSquarePlus className="h-4 w-4" />
+                Write a Review
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <ReviewForm 
+          eventId={eventId} 
+          onSuccess={() => setShowReviewForm(false)}
+        />
+      )}
+
+      {/* Reviews List */}
+      {reviews.length > 0 && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>
+                Reviews ({reviews.length})
+              </CardTitle>
+              <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">Newest</SelectItem>
+                  <SelectItem value="oldest">Oldest</SelectItem>
+                  <SelectItem value="highest">Highest Rated</SelectItem>
+                  <SelectItem value="lowest">Lowest Rated</SelectItem>
+                  <SelectItem value="helpful">Most Helpful</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {reviews.map((review) => (
+              <ReviewCard key={review.id} review={review} />
+            ))}
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+};

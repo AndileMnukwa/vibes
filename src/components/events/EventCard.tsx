@@ -1,6 +1,8 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,6 +21,25 @@ interface EventCardProps {
 const EventCard = ({ event }: EventCardProps) => {
   const navigate = useNavigate();
   const eventDate = new Date(event.event_date);
+
+  // Fetch reviews for this event to show average rating
+  const { data: reviews = [] } = useQuery({
+    queryKey: ['event-reviews', event.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('reviews')
+        .select('rating')
+        .eq('event_id', event.id)
+        .eq('status', 'approved');
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const averageRating = reviews.length > 0
+    ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
+    : 0;
   
   const handleViewDetails = () => {
     navigate(`/events/${event.id}`);
@@ -77,7 +98,13 @@ const EventCard = ({ event }: EventCardProps) => {
       <CardFooter className="flex justify-between">
         <div className="flex items-center">
           <Star className="h-4 w-4 text-yellow-400 mr-1" />
-          <span className="text-sm text-muted-foreground">No reviews yet</span>
+          {reviews.length > 0 ? (
+            <span className="text-sm text-muted-foreground">
+              {averageRating.toFixed(1)} ({reviews.length} review{reviews.length !== 1 ? 's' : ''})
+            </span>
+          ) : (
+            <span className="text-sm text-muted-foreground">No reviews yet</span>
+          )}
         </div>
         <Button 
           size="sm" 

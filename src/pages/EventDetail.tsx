@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -8,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { CalendarIntegrationComponent } from '@/components/events/CalendarIntegration';
+import { ReviewsList } from '@/components/reviews/ReviewsList';
 import { 
   Calendar, 
   MapPin, 
@@ -223,6 +225,12 @@ const EventDetail = () => {
                 </CardContent>
               </Card>
             )}
+
+            {/* Reviews Section */}
+            <div>
+              <h2 className="text-2xl font-bold mb-6">Reviews & Ratings</h2>
+              <ReviewsList eventId={event.id} />
+            </div>
           </div>
 
           {/* Sidebar */}
