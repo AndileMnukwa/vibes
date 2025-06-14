@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -8,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { CalendarIntegrationComponent } from '@/components/events/CalendarIntegration';
 import { 
   Calendar, 
   MapPin, 
@@ -132,6 +132,15 @@ const EventDetail = () => {
                   </div>
                 </div>
                 <div className="flex gap-2">
+                  <CalendarIntegrationComponent 
+                    event={{
+                      title: event.title,
+                      description: event.description,
+                      location: event.location,
+                      event_date: event.event_date,
+                      end_date: event.end_date,
+                    }}
+                  />
                   <Button variant="outline" size="sm">
                     <Heart className="h-4 w-4" />
                   </Button>

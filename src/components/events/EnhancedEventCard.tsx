@@ -1,179 +1,211 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, MapPin, Users, Star, ExternalLink, Navigation } from 'lucide-react';
+import { CalendarIntegrationComponent } from './CalendarIntegration';
+import { 
+  Calendar, 
+  MapPin, 
+  Users, 
+  DollarSign, 
+  ExternalLink,
+  Clock,
+  Star
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import type { Tables } from '@/integrations/supabase/types';
 import type { ExternalEvent } from '@/types/external-events';
 
-type Event = Tables<'events'> & {
+type LocalEvent = Tables<'events'> & {
   categories: Tables<'categories'> | null;
   profiles: Tables<'profiles'> | null;
 };
 
 interface EnhancedEventCardProps {
-  event: Event | ExternalEvent;
-  isExternal?: boolean;
+  event: LocalEvent | ExternalEvent;
+  isExternal: boolean;
 }
 
-export function EnhancedEventCard({ event, isExternal = false }: EnhancedEventCardProps) {
+export function EnhancedEventCard({ event, isExternal }: EnhancedEventCardProps) {
   const navigate = useNavigate();
-  const eventDate = new Date(event.event_date);
-  
-  const handleViewDetails = () => {
+
+  const handleClick = () => {
     if (isExternal) {
-      window.open((event as ExternalEvent).external_url, '_blank');
+      const externalEvent = event as ExternalEvent;
+      window.open(externalEvent.external_url, '_blank');
     } else {
       navigate(`/events/${event.id}`);
     }
   };
 
-  const getImageUrl = () => {
-    if (isExternal) {
-      return (event as ExternalEvent).image_url;
-    }
-    // Fallback to category-based placeholder
-    return 'https://images.unsplash.com/photo-1540575467063-178a50c2df87';
+  const handleAddToCalendar = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click
   };
 
-  const getCategoryInfo = () => {
-    if (isExternal) {
-      const extEvent = event as ExternalEvent;
-      return {
-        name: extEvent.category || 'External Event',
-        color: '#8B5CF6', // Purple for external events
-      };
-    }
-    
-    const localEvent = event as Event;
-    return {
-      name: localEvent.categories?.name || 'Event',
-      color: localEvent.categories?.color || '#8B5CF6',
-    };
-  };
-
-  const category = getCategoryInfo();
+  const eventDate = new Date(event.event_date);
+  const endDate = 'end_date' in event && event.end_date ? new Date(event.end_date) : null;
+  
+  const price = event.ticket_price;
+  const capacity = event.capacity;
+  const location = event.location;
+  const title = event.title;
+  const description = 'short_description' in event ? event.short_description : event.description;
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      whileHover={{ y: -4, transition: { duration: 0.2 } }}
+      whileHover={{ y: -4 }}
+      transition={{ duration: 0.2 }}
     >
-      <Card className="group relative overflow-hidden hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-background to-muted/20 backdrop-blur-sm">
-        {/* Image Header */}
-        <div className="relative h-48 overflow-hidden">
-          <img
-            src={getImageUrl()}
-            alt={event.title}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-            loading="lazy"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-          
-          {/* Source Badge */}
-          <div className="absolute top-3 left-3">
-            <Badge 
-              variant="secondary" 
-              className="bg-black/20 text-white border-white/20 backdrop-blur-sm"
-            >
-              {isExternal ? (event as ExternalEvent).source : 'local'}
-            </Badge>
-          </div>
-          
-          {/* Category Badge */}
-          <div className="absolute top-3 right-3">
-            <Badge 
-              variant="secondary"
-              style={{ 
-                backgroundColor: category.color + '20', 
-                color: category.color,
-                borderColor: category.color + '40'
-              }}
-              className="backdrop-blur-sm"
-            >
-              {category.name}
-            </Badge>
-          </div>
-
-          {/* Distance Badge */}
-          {isExternal && (event as ExternalEvent).distance && (
-            <div className="absolute bottom-3 left-3">
-              <Badge variant="secondary" className="bg-white/20 text-white border-white/20 backdrop-blur-sm flex items-center gap-1">
-                <Navigation className="h-3 w-3" />
-                {(event as ExternalEvent).distance!.toFixed(1)} mi
+      <Card className="h-full cursor-pointer hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+        {/* Event Image */}
+        {event.image_url && (
+          <div className="relative h-48 overflow-hidden">
+            <img 
+              src={event.image_url} 
+              alt={title}
+              className="w-full h-full object-cover"
+            />
+            {isExternal && (
+              <Badge className="absolute top-3 right-3 bg-blue-600">
+                External
               </Badge>
-            </div>
-          )}
-        </div>
-
-        <CardHeader className="pb-3">
-          <div className="space-y-2">
-            <h3 className="text-lg font-semibold line-clamp-2 group-hover:text-primary transition-colors">
-              {event.title}
-            </h3>
-            <p className="text-sm text-muted-foreground line-clamp-2">
-              {event.short_description || event.description}
-            </p>
-          </div>
-        </CardHeader>
-        
-        <CardContent className="space-y-3 pb-3">
-          <div className="flex items-center text-sm text-muted-foreground">
-            <Calendar className="h-4 w-4 mr-2 text-primary" />
-            <span>{eventDate.toLocaleDateString()} at {eventDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-          </div>
-          
-          <div className="flex items-center text-sm text-muted-foreground">
-            <MapPin className="h-4 w-4 mr-2 text-primary" />
-            <span className="line-clamp-1">{event.location}</span>
-          </div>
-          
-          {event.capacity && (
-            <div className="flex items-center text-sm text-muted-foreground">
-              <Users className="h-4 w-4 mr-2 text-primary" />
-              <span>Capacity: {event.capacity}</span>
-            </div>
-          )}
-          
-          {/* Price Display */}
-          <div className="flex items-center justify-between">
-            {event.ticket_price !== null && event.ticket_price > 0 ? (
-              <div className="text-xl font-bold text-green-600">
-                ${event.ticket_price}
-              </div>
-            ) : (
-              <div className="text-xl font-bold text-green-600">
-                Free
-              </div>
             )}
-            
-            <div className="flex items-center text-sm text-muted-foreground">
-              <Star className="h-4 w-4 text-yellow-400 mr-1" />
-              <span>4.2</span>
+          </div>
+        )}
+        
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="font-semibold text-lg line-clamp-2 flex-1" onClick={handleClick}>
+              {title}
+            </h3>
+            {isExternal && (
+              <ExternalLink className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            )}
+          </div>
+          
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Calendar className="h-4 w-4" />
+            <span>
+              {eventDate.toLocaleDateString()} at {eventDate.toLocaleTimeString([], { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+              })}
+            </span>
+          </div>
+
+          {endDate && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Clock className="h-4 w-4" />
+              <span>
+                Until {endDate.toLocaleTimeString([], { 
+                  hour: '2-digit', 
+                  minute: '2-digit' 
+                })}
+              </span>
             </div>
+          )}
+        </CardHeader>
+
+        <CardContent className="pt-0" onClick={handleClick}>
+          {/* Description */}
+          {description && (
+            <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
+              {description}
+            </p>
+          )}
+
+          {/* Location */}
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+            <MapPin className="h-4 w-4" />
+            <span className="line-clamp-1">{location}</span>
+            {'distance' in event && event.distance && (
+              <Badge variant="outline" className="ml-auto">
+                {event.distance.toFixed(1)}km
+              </Badge>
+            )}
+          </div>
+
+          {/* Event Details */}
+          <div className="flex items-center justify-between text-sm mb-4">
+            <div className="flex items-center gap-4">
+              {price !== null && price > 0 ? (
+                <div className="flex items-center gap-1 text-green-600 font-medium">
+                  <DollarSign className="h-4 w-4" />
+                  ${price}
+                </div>
+              ) : (
+                <Badge variant="secondary" className="text-green-600 bg-green-50">
+                  Free
+                </Badge>
+              )}
+              
+              {capacity && (
+                <div className="flex items-center gap-1 text-muted-foreground">
+                  <Users className="h-4 w-4" />
+                  {capacity}
+                </div>
+              )}
+            </div>
+
+            {/* Category for local events */}
+            {!isExternal && 'categories' in event && event.categories && (
+              <Badge 
+                variant="secondary"
+                style={{ 
+                  backgroundColor: event.categories.color + '20', 
+                  color: event.categories.color 
+                }}
+              >
+                {event.categories.name}
+              </Badge>
+            )}
+
+            {/* Source badge for external events */}
+            {isExternal && 'source' in event && (
+              <Badge variant="outline" className="capitalize">
+                {event.source}
+              </Badge>
+            )}
+          </div>
+
+          {/* Organizer for local events */}
+          {!isExternal && 'profiles' in event && event.profiles && (
+            <div className="text-xs text-muted-foreground mb-4">
+              Organized by {event.profiles.full_name || event.profiles.username || 'Anonymous'}
+            </div>
+          )}
+
+          {/* External organizer */}
+          {isExternal && 'organizer' in event && event.organizer && (
+            <div className="text-xs text-muted-foreground mb-4">
+              Organized by {event.organizer}
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex gap-2 pt-2" onClick={handleAddToCalendar}>
+            <CalendarIntegrationComponent 
+              event={{
+                title,
+                description: description || '',
+                location,
+                event_date: event.event_date,
+                end_date: endDate?.toISOString() || null,
+              }}
+              size="sm"
+            />
+            <Button 
+              variant="default" 
+              size="sm" 
+              className="flex-1"
+              onClick={handleClick}
+            >
+              {isExternal ? 'View Event' : 'Learn More'}
+            </Button>
           </div>
         </CardContent>
-        
-        <CardFooter className="pt-0">
-          <Button 
-            className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
-            onClick={handleViewDetails}
-          >
-            {isExternal ? (
-              <>
-                <ExternalLink className="h-4 w-4 mr-2" />
-                View on {(event as ExternalEvent).source}
-              </>
-            ) : (
-              'View Details'
-            )}
-          </Button>
-        </CardFooter>
       </Card>
     </motion.div>
   );
