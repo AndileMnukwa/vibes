@@ -10,6 +10,7 @@ import CategoriesGrid from '@/components/categories/CategoriesGrid';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { EnhancedEventsGrid } from '@/components/events/EnhancedEventsGrid';
+import { AdminBootstrap } from '@/components/admin/AdminBootstrap';
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -40,6 +41,9 @@ const Index = () => {
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
+        {/* Admin Bootstrap Component - only shows when no admin exists */}
+        <AdminBootstrap />
+
         {/* Hero Section */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-4">
