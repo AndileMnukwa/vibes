@@ -34,6 +34,10 @@ const AdminNotifications = () => {
     }
   };
 
+  const handleMarkAllAsRead = () => {
+    markAllAsRead();
+  };
+
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'new_review':
@@ -43,6 +47,13 @@ const AdminNotifications = () => {
       default:
         return <Bell className="h-4 w-4 text-gray-500" />;
     }
+  };
+
+  const getNotificationRating = (data: any) => {
+    if (data && typeof data === 'object' && 'rating' in data) {
+      return data.rating as number;
+    }
+    return null;
   };
 
   return (
@@ -56,7 +67,7 @@ const AdminNotifications = () => {
         </div>
         {unreadCount > 0 && (
           <Button
-            onClick={markAllAsRead}
+            onClick={handleMarkAllAsRead}
             disabled={isMarkingAllAsRead}
             variant="outline"
           >
@@ -93,63 +104,67 @@ const AdminNotifications = () => {
             </Card>
           ) : (
             <div className="space-y-3">
-              {filteredNotifications.map((notification) => (
-                <Card 
-                  key={notification.id}
-                  className={`cursor-pointer transition-colors hover:bg-muted/50 ${
-                    !notification.read ? 'border-l-4 border-l-blue-500' : ''
-                  }`}
-                  onClick={() => handleNotificationClick(notification)}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0 mt-1">
-                        {getNotificationIcon(notification.type)}
-                      </div>
-                      
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className={`font-medium ${!notification.read ? 'text-foreground' : 'text-muted-foreground'}`}>
-                            {notification.title}
-                          </h4>
-                          {!notification.read && (
-                            <div className="h-2 w-2 bg-blue-500 rounded-full" />
-                          )}
+              {filteredNotifications.map((notification) => {
+                const rating = getNotificationRating(notification.data);
+                
+                return (
+                  <Card 
+                    key={notification.id}
+                    className={`cursor-pointer transition-colors hover:bg-muted/50 ${
+                      !notification.read ? 'border-l-4 border-l-blue-500' : ''
+                    }`}
+                    onClick={() => handleNotificationClick(notification)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0 mt-1">
+                          {getNotificationIcon(notification.type)}
                         </div>
                         
-                        <p className="text-sm text-muted-foreground mb-2">
-                          {notification.message}
-                        </p>
-                        
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-muted-foreground">
-                            {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
-                          </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className={`font-medium ${!notification.read ? 'text-foreground' : 'text-muted-foreground'}`}>
+                              {notification.title}
+                            </h4>
+                            {!notification.read && (
+                              <div className="h-2 w-2 bg-blue-500 rounded-full" />
+                            )}
+                          </div>
                           
-                          {notification.data?.rating && (
-                            <Badge variant="outline">
-                              {notification.data.rating}/5 stars
-                            </Badge>
-                          )}
+                          <p className="text-sm text-muted-foreground mb-2">
+                            {notification.message}
+                          </p>
+                          
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-muted-foreground">
+                              {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                            </span>
+                            
+                            {rating && (
+                              <Badge variant="outline">
+                                {rating}/5 stars
+                              </Badge>
+                            )}
+                          </div>
                         </div>
+                        
+                        {!notification.read && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              markAsRead(notification.id);
+                            }}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
-                      
-                      {!notification.read && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            markAsRead(notification.id);
-                          }}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </TabsContent>
