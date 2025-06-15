@@ -79,7 +79,6 @@ export const FullCalendarView = () => {
             initialView="dayGridMonth"
             events={calendarEvents}
             eventClick={handleEventClick}
-            dateClick={handleDateClick}
             height="auto"
             eventDisplay="block"
             dayMaxEvents={3}
@@ -110,6 +109,7 @@ export const FullCalendarView = () => {
             slotMaxTime="24:00:00"
             expandRows={true}
             stickyHeaderDates={true}
+            select={handleDateClick}
           />
         </CardContent>
       </Card>
