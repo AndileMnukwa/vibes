@@ -20,9 +20,15 @@ serve(async (req) => {
       throw new Error('Missing required fields: reviewId, title, content');
     }
 
+    // Try to get the API key with more detailed logging
     const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
+    console.log('Available environment variables:', Object.keys(Deno.env.toObject()));
+    console.log('ANTHROPIC_API_KEY found:', !!anthropicApiKey);
+    console.log('ANTHROPIC_API_KEY length:', anthropicApiKey?.length || 0);
+    
     if (!anthropicApiKey) {
-      throw new Error('ANTHROPIC_API_KEY not configured');
+      console.error('ANTHROPIC_API_KEY environment variable is not set or is empty');
+      throw new Error('ANTHROPIC_API_KEY not configured - please check Supabase Edge Function secrets');
     }
 
     console.log('Starting sentiment analysis for review:', reviewId);
