@@ -25,6 +25,8 @@ serve(async (req) => {
       throw new Error('ANTHROPIC_API_KEY not configured');
     }
 
+    console.log('Starting sentiment analysis for review:', reviewId);
+
     // Analyze sentiment using Claude AI
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -55,12 +57,19 @@ Only respond with valid JSON, no other text.`
       }),
     });
 
+    console.log('Anthropic API response status:', response.status);
+
     if (!response.ok) {
-      throw new Error(`Claude API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error('Anthropic API error details:', errorText);
+      throw new Error(`Claude API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
+    console.log('Raw Claude response:', JSON.stringify(data));
+    
     const analysisText = data.content[0].text;
+    console.log('Analysis text:', analysisText);
     
     let analysis;
     try {
@@ -71,9 +80,11 @@ Only respond with valid JSON, no other text.`
       analysis = {
         sentiment: 'neutral',
         confidence: 0.5,
-        summary: 'Unable to generate summary.'
+        summary: 'Unable to generate summary due to parsing error.'
       };
     }
+
+    console.log('Parsed analysis:', analysis);
 
     // Update the review in the database
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -91,8 +102,11 @@ Only respond with valid JSON, no other text.`
       .eq('id', reviewId);
 
     if (updateError) {
+      console.error('Database update error:', updateError);
       throw updateError;
     }
+
+    console.log('Successfully updated review with sentiment analysis');
 
     return new Response(
       JSON.stringify({
@@ -107,7 +121,10 @@ Only respond with valid JSON, no other text.`
   } catch (error) {
     console.error('Error in analyze-review-sentiment function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        success: false,
+        error: error.message 
+      }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
