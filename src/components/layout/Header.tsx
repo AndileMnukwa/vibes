@@ -10,8 +10,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { User, LogOut, Settings, Calendar, Home } from 'lucide-react';
+import { User, LogOut, Settings, Calendar, Home, Bell } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { UserNotificationBell } from '@/components/notifications/UserNotificationBell';
 
 const Header = () => {
   const { user, signOut } = useAuth();
@@ -54,6 +55,8 @@ const Header = () => {
         <div className="flex items-center space-x-4">
           <ThemeToggle />
           
+          {user && <UserNotificationBell />}
+          
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -70,6 +73,10 @@ const Header = () => {
                 <DropdownMenuItem onClick={() => navigate('/profile')}>
                   <User className="mr-2 h-4 w-4" />
                   Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/notifications')}>
+                  <Bell className="mr-2 h-4 w-4" />
+                  Notifications
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('/calendar')}>
                   <Calendar className="mr-2 h-4 w-4" />
