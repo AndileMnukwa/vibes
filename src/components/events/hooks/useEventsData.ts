@@ -128,15 +128,11 @@ export function useEventsData() {
     },
   });
 
-  // Fetch external events (only when location is available)
+  // Fetch external events (will use a fallback location if user location is not available)
   const { data: externalEvents, isLoading: externalLoading, error: externalError } = useQuery({
     queryKey: ['external-events', userLocation, distanceFilter, externalSources],
     queryFn: async () => {
       console.log('Fetching external events...');
-      if (!userLocation) {
-        console.log('No user location, returning empty external events');
-        return [];
-      }
       try {
         const events = await ExternalEventService.fetchExternalEvents(
           userLocation,
@@ -150,7 +146,7 @@ export function useEventsData() {
         return []; // Return empty array instead of throwing
       }
     },
-    enabled: true, // Always enabled, but returns empty array if no location
+    enabled: true, // Always fetch external events.
   });
 
   const isLoading = localLoading || externalLoading;
