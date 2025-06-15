@@ -70,7 +70,7 @@ export function useAdminNotifications() {
     },
   });
 
-  // Real-time subscription for new notifications - with unique channel per hook instance
+  // Real-time subscription for new notifications with proper cleanup
   useEffect(() => {
     if (!user || !isAdmin) return;
 
@@ -80,7 +80,7 @@ export function useAdminNotifications() {
       channelRef.current = null;
     }
 
-    // Create a unique channel name with timestamp to prevent conflicts
+    // Create a unique channel name to prevent conflicts with user notifications
     const channelName = `admin-notifications-${user.id}-${Date.now()}-${Math.random()}`;
     
     const channel = supabase

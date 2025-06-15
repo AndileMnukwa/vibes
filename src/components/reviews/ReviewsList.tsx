@@ -93,9 +93,9 @@ export const ReviewsList = ({ eventId }: ReviewsListProps) => {
     },
   });
 
-  // Real-time subscription for review responses - fixed to prevent multiple subscriptions
+  // Real-time subscription for review responses with unique channel name
   useEffect(() => {
-    const channelName = `review-responses-${eventId}`;
+    const channelName = `review-responses-${eventId}-${Date.now()}`;
     
     const channel = supabase
       .channel(channelName)

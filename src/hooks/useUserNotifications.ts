@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -13,6 +13,7 @@ export const useUserNotifications = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isMarkingAllAsRead, setIsMarkingAllAsRead] = useState(false);
+  const channelRef = useRef<any>(null);
 
   // Fetch user notifications
   const { data: notifications = [], isLoading, error } = useQuery({
@@ -89,12 +90,21 @@ export const useUserNotifications = () => {
     }
   };
 
-  // Set up real-time subscription
+  // Set up real-time subscription with proper cleanup
   useEffect(() => {
     if (!user) return;
 
+    // Clean up existing channel if it exists
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
+
+    // Create a unique channel name to prevent conflicts
+    const channelName = `user-notifications-${user.id}-${Date.now()}`;
+    
     const channel = supabase
-      .channel('user-notifications')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -110,8 +120,13 @@ export const useUserNotifications = () => {
       )
       .subscribe();
 
+    channelRef.current = channel;
+
     return () => {
-      supabase.removeChannel(channel);
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
     };
   }, [user, queryClient]);
 
