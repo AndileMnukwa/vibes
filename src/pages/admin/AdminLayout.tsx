@@ -4,7 +4,7 @@ import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Button } from '@/components/ui/button';
-import { Calendar, Users, Plus, Home, Bell } from 'lucide-react';
+import { Calendar, Users, Plus, Home, Bell, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NotificationBell } from '@/components/admin/NotificationBell';
 
@@ -40,6 +40,7 @@ const AdminLayout = () => {
   const navItems = [
     { path: '/admin/events', label: 'Manage Events', icon: Calendar },
     { path: '/admin/create-event', label: 'Create Event', icon: Plus },
+    { path: '/admin/reviews', label: 'Manage Reviews', icon: MessageSquare },
     { path: '/admin/users', label: 'Manage Users', icon: Users },
     { path: '/admin/notifications', label: 'Notifications', icon: Bell },
   ];

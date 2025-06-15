@@ -19,6 +19,7 @@ import AdminEditEvent from "./pages/admin/AdminEditEvent";
 import AdminEventRegistrations from "./pages/admin/AdminEventRegistrations";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminNotifications from "./pages/admin/AdminNotifications";
+import AdminReviews from "./pages/admin/AdminReviews";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import { LocationProvider } from "@/components/location/LocationProvider";
 
@@ -45,6 +46,7 @@ const App = () => (
                     <Route path="events/:id/registrations" element={<AdminEventRegistrations />} />
                     <Route path="create-event" element={<AdminCreateEvent />} />
                     <Route path="edit-event/:id" element={<AdminEditEvent />} />
+                    <Route path="reviews" element={<AdminReviews />} />
                     <Route path="users" element={<AdminUsers />} />
                     <Route path="notifications" element={<AdminNotifications />} />
                   </Route>
