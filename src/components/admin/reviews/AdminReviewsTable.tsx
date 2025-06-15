@@ -180,6 +180,8 @@ export const AdminReviewsTable = ({ reviews, onRefresh, onReviewSelect }: AdminR
                         size="sm"
                         onClick={() => handleStatusUpdate(review.id, 'rejected')}
                         disabled={updateReviewStatus.isPending}
+                      >
+                        <XCircle className="h-4 w-4 text-red-600" />
                       </Button>
                     </>
                   )}
