@@ -1,5 +1,4 @@
-
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -17,13 +16,7 @@ const Index = () => {
   const navigate = useNavigate();
   const { userLocation, requestLocation, locationLoading } = useLocation();
 
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate('/auth');
-    }
-  }, [user, loading, navigate]);
-
-  if (loading || roleLoading) {
+  if (loading || (user && roleLoading)) {
     return (
       <Layout>
         <div className="min-h-screen flex items-center justify-center">
@@ -34,10 +27,6 @@ const Index = () => {
         </div>
       </Layout>
     );
-  }
-
-  if (!user) {
-    return null; // Will redirect to auth
   }
 
   return (
