@@ -105,12 +105,25 @@ export const useUserAnalytics = () => {
     eventQueueRef.current = [];
 
     try {
-      const { error } = await supabase
-        .from('user_analytics')
-        .insert(eventsToSend);
+      // Use raw SQL since the types haven't been regenerated yet
+      const { error } = await supabase.rpc('exec', {
+        sql: `
+          INSERT INTO user_analytics (event_type, event_data, timestamp, user_id, session_id, page_url, user_agent)
+          VALUES ${eventsToSend.map((_, i) => `($${i * 7 + 1}, $${i * 7 + 2}, $${i * 7 + 3}, $${i * 7 + 4}, $${i * 7 + 5}, $${i * 7 + 6}, $${i * 7 + 7})`).join(', ')}
+        `,
+        args: eventsToSend.flatMap(event => [
+          event.event_type,
+          JSON.stringify(event.event_data),
+          event.timestamp,
+          event.user_id || null,
+          event.session_id,
+          event.page_url,
+          event.user_agent
+        ])
+      });
 
       if (error) {
-        console.error('Faile to send analytics events:', error);
+        console.error('Failed to send analytics events:', error);
         // Re-queue events on failure
         eventQueueRef.current.unshift(...eventsToSend);
       }
@@ -134,15 +147,27 @@ export const useUserAnalytics = () => {
     };
 
     try {
-      await supabase
-        .from('user_sessions')
-        .insert(sessionData);
+      // Use raw SQL since the types haven't been regenerated yet
+      await supabase.rpc('exec', {
+        sql: `
+          INSERT INTO user_sessions (session_id, user_id, start_time, end_time, page_views, events_count)
+          VALUES ($1, $2, $3, $4, $5, $6)
+        `,
+        args: [
+          sessionData.session_id,
+          user?.id || null,
+          sessionData.start_time,
+          sessionData.end_time,
+          sessionData.page_views,
+          sessionData.events_count
+        ]
+      });
     } catch (error) {
       console.error('Failed to save session:', error);
     }
 
     sessionRef.current = null;
-  }, [flushEvents]);
+  }, [flushEvents, user?.id]);
 
   // Track specific user interactions
   const trackInteraction = useCallback((element: string, action: string, data?: Record<string, any>) => {

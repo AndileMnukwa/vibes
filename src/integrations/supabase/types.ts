@@ -197,6 +197,30 @@ export type Database = {
         }
         Relationships: []
       }
+      push_subscriptions: {
+        Row: {
+          created_at: string
+          id: string
+          subscription: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          subscription: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          subscription?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       review_responses: {
         Row: {
           admin_user_id: string
@@ -359,6 +383,42 @@ export type Database = {
           },
         ]
       }
+      user_analytics: {
+        Row: {
+          created_at: string
+          event_data: Json
+          event_type: string
+          id: string
+          page_url: string
+          session_id: string
+          timestamp: string
+          user_agent: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_data?: Json
+          event_type: string
+          id?: string
+          page_url: string
+          session_id: string
+          timestamp: string
+          user_agent: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_data?: Json
+          event_type?: string
+          id?: string
+          page_url?: string
+          session_id?: string
+          timestamp?: string
+          user_agent?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_event_attendance: {
         Row: {
           attendance_status: string | null
@@ -416,6 +476,39 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_sessions: {
+        Row: {
+          created_at: string
+          end_time: string | null
+          events_count: number
+          id: string
+          page_views: number
+          session_id: string
+          start_time: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          end_time?: string | null
+          events_count?: number
+          id?: string
+          page_views?: number
+          session_id: string
+          start_time: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          end_time?: string | null
+          events_count?: number
+          id?: string
+          page_views?: number
+          session_id?: string
+          start_time?: string
+          user_id?: string | null
         }
         Relationships: []
       }

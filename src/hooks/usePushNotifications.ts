@@ -118,14 +118,17 @@ export const usePushNotifications = () => {
         },
       };
 
-      // Save subscription to database
-      const { error } = await supabase
-        .from('push_subscriptions')
-        .upsert({
-          user_id: user.id,
-          subscription: subscriptionData,
-          created_at: new Date().toISOString(),
-        });
+      // Use raw SQL since the types haven't been regenerated yet
+      const { error } = await supabase.rpc('exec', {
+        sql: `
+          INSERT INTO push_subscriptions (user_id, subscription, created_at)
+          VALUES ($1, $2, NOW())
+          ON CONFLICT (user_id) DO UPDATE SET
+            subscription = $2,
+            updated_at = NOW()
+        `,
+        args: [user.id, JSON.stringify(subscriptionData)]
+      });
 
       if (error) throw error;
 
@@ -160,11 +163,11 @@ export const usePushNotifications = () => {
         }
       }
 
-      // Remove subscription from database
-      const { error } = await supabase
-        .from('push_subscriptions')
-        .delete()
-        .eq('user_id', user.id);
+      // Use raw SQL since the types haven't been regenerated yet
+      const { error } = await supabase.rpc('exec', {
+        sql: 'DELETE FROM push_subscriptions WHERE user_id = $1',
+        args: [user.id]
+      });
 
       if (error) throw error;
 
