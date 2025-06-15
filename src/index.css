@@ -159,4 +159,35 @@
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
   }
+
+  /* New Particle Animations */
+  .particles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .particle {
+    position: absolute;
+    background-color: rgba(255, 255, 255, 0.15);
+    border-radius: 50%;
+    animation: particle-flow 20s linear infinite;
+    opacity: 0;
+    bottom: 0;
+  }
+
+  @keyframes particle-flow {
+    from {
+      transform: translateY(0) scale(0.5);
+      opacity: 1;
+    }
+    to {
+      transform: translateY(-100vh) scale(1);
+      opacity: 0;
+    }
+  }
 }
