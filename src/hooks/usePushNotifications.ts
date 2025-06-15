@@ -88,15 +88,17 @@ export const usePushNotifications = () => {
       // Create push subscription
       const pushSubscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: process.env.VITE_VAPID_PUBLIC_KEY,
+        applicationServerKey: 'your-vapid-public-key', // Replace with actual VAPID key
       });
 
-      // Save subscription to database
+      // Convert PushSubscriptionJSON to JSON and save to database
+      const subscriptionJson = pushSubscription.toJSON();
+      
       const { data, error } = await supabase
         .from('push_subscriptions')
         .insert({
           user_id: user.id,
-          subscription: pushSubscription.toJSON(),
+          subscription: subscriptionJson as any, // Cast to any to handle Json type
         })
         .select()
         .single();

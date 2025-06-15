@@ -105,22 +105,18 @@ export const useUserAnalytics = () => {
     eventQueueRef.current = [];
 
     try {
-      // Use raw SQL since the types haven't been regenerated yet
-      const { error } = await supabase.rpc('exec', {
-        sql: `
-          INSERT INTO user_analytics (event_type, event_data, timestamp, user_id, session_id, page_url, user_agent)
-          VALUES ${eventsToSend.map((_, i) => `($${i * 7 + 1}, $${i * 7 + 2}, $${i * 7 + 3}, $${i * 7 + 4}, $${i * 7 + 5}, $${i * 7 + 6}, $${i * 7 + 7})`).join(', ')}
-        `,
-        args: eventsToSend.flatMap(event => [
-          event.event_type,
-          JSON.stringify(event.event_data),
-          event.timestamp,
-          event.user_id || null,
-          event.session_id,
-          event.page_url,
-          event.user_agent
-        ])
-      });
+      // Use Supabase client insert method instead of raw SQL
+      const { error } = await supabase
+        .from('user_analytics')
+        .insert(eventsToSend.map(event => ({
+          event_type: event.event_type,
+          event_data: event.event_data,
+          timestamp: event.timestamp,
+          user_id: event.user_id || null,
+          session_id: event.session_id,
+          page_url: event.page_url,
+          user_agent: event.user_agent
+        })));
 
       if (error) {
         console.error('Failed to send analytics events:', error);
@@ -142,26 +138,19 @@ export const useUserAnalytics = () => {
 
     // Update session end time
     const sessionData = {
-      ...sessionRef.current,
+      session_id: sessionRef.current.session_id,
+      user_id: user?.id || null,
+      start_time: sessionRef.current.start_time,
       end_time: new Date().toISOString(),
+      page_views: sessionRef.current.page_views,
+      events_count: sessionRef.current.events_count
     };
 
     try {
-      // Use raw SQL since the types haven't been regenerated yet
-      await supabase.rpc('exec', {
-        sql: `
-          INSERT INTO user_sessions (session_id, user_id, start_time, end_time, page_views, events_count)
-          VALUES ($1, $2, $3, $4, $5, $6)
-        `,
-        args: [
-          sessionData.session_id,
-          user?.id || null,
-          sessionData.start_time,
-          sessionData.end_time,
-          sessionData.page_views,
-          sessionData.events_count
-        ]
-      });
+      // Use Supabase client insert method instead of raw SQL
+      await supabase
+        .from('user_sessions')
+        .insert(sessionData);
     } catch (error) {
       console.error('Failed to save session:', error);
     }
