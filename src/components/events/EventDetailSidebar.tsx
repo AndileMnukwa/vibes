@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { DollarSign, Users, CheckCircle } from 'lucide-react';
+import { DollarSign, Users, CheckCircle, CreditCard } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEventRegistration } from '@/hooks/useEventRegistration';
 import type { Tables } from '@/integrations/supabase/types';
@@ -21,7 +21,10 @@ interface EventDetailSidebarProps {
 export const EventDetailSidebar = ({ event }: EventDetailSidebarProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { isRegistered, isLoading, register, unregister } = useEventRegistration(event.id);
+  const { isRegistered, hasPaidTicket, isLoading, register, purchaseTicket, unregister } = useEventRegistration(event.id);
+
+  const isPaidEvent = event.ticket_price && event.ticket_price > 0;
+  const isEventPast = new Date(event.event_date) < new Date();
 
   const handleRegistrationClick = () => {
     if (!user) {
@@ -29,27 +32,47 @@ export const EventDetailSidebar = ({ event }: EventDetailSidebarProps) => {
       return;
     }
 
-    if (isRegistered) {
-      unregister();
+    if (isPaidEvent) {
+      if (hasPaidTicket) {
+        // User already has a paid ticket, allow unregistration
+        unregister();
+      } else {
+        // Initiate payment process
+        purchaseTicket();
+      }
     } else {
-      register();
+      // Free event
+      if (isRegistered) {
+        unregister();
+      } else {
+        register();
+      }
     }
   };
 
   const getButtonText = () => {
     if (!user) return 'Sign In to Register';
     if (isLoading) return 'Processing...';
-    if (isRegistered) return 'Registered';
-    return event.ticket_price && event.ticket_price > 0 ? 'Buy Ticket' : 'Register Free';
+    
+    if (isPaidEvent) {
+      if (hasPaidTicket) return 'Purchased';
+      return `Buy Ticket - $${event.ticket_price}`;
+    } else {
+      if (isRegistered) return 'Registered';
+      return 'Register Free';
+    }
   };
 
   const getButtonVariant = () => {
-    if (isRegistered) return 'outline' as const;
+    if (isRegistered || hasPaidTicket) return 'outline' as const;
     return 'default' as const;
   };
 
-  // Check if event is in the past
-  const isEventPast = new Date(event.event_date) < new Date();
+  const getButtonIcon = () => {
+    if (isRegistered || hasPaidTicket) return <CheckCircle className="mr-2 h-4 w-4" />;
+    if (isPaidEvent) return <CreditCard className="mr-2 h-4 w-4" />;
+    return null;
+  };
 
   return (
     <div className="space-y-6">
@@ -59,7 +82,7 @@ export const EventDetailSidebar = ({ event }: EventDetailSidebarProps) => {
           <CardTitle>Event Details</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {event.ticket_price !== null && event.ticket_price > 0 ? (
+          {isPaidEvent ? (
             <div className="flex items-center justify-between">
               <span className="flex items-center">
                 <DollarSign className="h-4 w-4 mr-1" />
@@ -100,13 +123,11 @@ export const EventDetailSidebar = ({ event }: EventDetailSidebarProps) => {
             disabled={isLoading || isEventPast}
             variant={getButtonVariant()}
           >
-            {isRegistered && (
-              <CheckCircle className="mr-2 h-4 w-4" />
-            )}
+            {getButtonIcon()}
             {isEventPast ? 'Event Ended' : getButtonText()}
           </Button>
 
-          {isRegistered && !isEventPast && (
+          {(isRegistered || hasPaidTicket) && !isEventPast && (
             <Button 
               variant="ghost" 
               size="sm" 
@@ -114,8 +135,14 @@ export const EventDetailSidebar = ({ event }: EventDetailSidebarProps) => {
               onClick={() => unregister()}
               disabled={isLoading}
             >
-              Unregister
+              {isPaidEvent ? 'Cancel Ticket' : 'Unregister'}
             </Button>
+          )}
+
+          {isPaidEvent && !hasPaidTicket && user && (
+            <p className="text-sm text-muted-foreground text-center">
+              Secure payment processed by Stripe
+            </p>
           )}
         </CardContent>
       </Card>

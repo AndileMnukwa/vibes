@@ -29,7 +29,27 @@ export const useEventRegistration = (eventId: string) => {
     enabled: !!user && !!eventId,
   });
 
-  // Register for event mutation
+  // Check if user has a paid ticket for this event
+  const { data: hasPaidTicket } = useQuery({
+    queryKey: ['event-purchase', eventId, user?.id],
+    queryFn: async () => {
+      if (!user) return false;
+      
+      const { data, error } = await supabase
+        .from('event_purchases')
+        .select('id, payment_status')
+        .eq('event_id', eventId)
+        .eq('user_id', user.id)
+        .eq('payment_status', 'paid')
+        .maybeSingle();
+
+      if (error) throw error;
+      return !!data;
+    },
+    enabled: !!user && !!eventId,
+  });
+
+  // Register for free event mutation
   const registerMutation = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error('User not authenticated');
@@ -61,6 +81,34 @@ export const useEventRegistration = (eventId: string) => {
     },
   });
 
+  // Purchase ticket for paid event mutation
+  const purchaseTicketMutation = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error('User not authenticated');
+      
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { eventId },
+      });
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      if (data.url) {
+        // Open Stripe checkout in a new tab
+        window.open(data.url, '_blank');
+      }
+    },
+    onError: (error) => {
+      console.error('Purchase error:', error);
+      toast({
+        title: "Purchase Failed",
+        description: "There was an error processing your purchase. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Unregister from event mutation
   const unregisterMutation = useMutation({
     mutationFn: async () => {
@@ -76,6 +124,7 @@ export const useEventRegistration = (eventId: string) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['event-registration', eventId, user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['event-purchase', eventId, user?.id] });
       toast({
         title: "Unregistered Successfully",
         description: "You have been unregistered from this event.",
@@ -97,6 +146,12 @@ export const useEventRegistration = (eventId: string) => {
     setIsLoading(false);
   };
 
+  const purchaseTicket = () => {
+    setIsLoading(true);
+    purchaseTicketMutation.mutate();
+    setIsLoading(false);
+  };
+
   const unregister = () => {
     setIsLoading(true);
     unregisterMutation.mutate();
@@ -105,9 +160,11 @@ export const useEventRegistration = (eventId: string) => {
 
   return {
     isRegistered: !!isRegistered,
-    isLoading: checkingRegistration || isLoading || registerMutation.isPending || unregisterMutation.isPending,
+    hasPaidTicket: !!hasPaidTicket,
+    isLoading: checkingRegistration || isLoading || registerMutation.isPending || purchaseTicketMutation.isPending || unregisterMutation.isPending,
     register,
+    purchaseTicket,
     unregister,
-    error: registerMutation.error || unregisterMutation.error,
+    error: registerMutation.error || purchaseTicketMutation.error || unregisterMutation.error,
   };
 };

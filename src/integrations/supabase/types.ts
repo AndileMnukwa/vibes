@@ -33,6 +33,59 @@ export type Database = {
         }
         Relationships: []
       }
+      event_purchases: {
+        Row: {
+          amount_paid: number
+          created_at: string
+          currency: string | null
+          event_id: string
+          id: string
+          payment_status: string | null
+          purchase_date: string | null
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
+          ticket_quantity: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_paid: number
+          created_at?: string
+          currency?: string | null
+          event_id: string
+          id?: string
+          payment_status?: string | null
+          purchase_date?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          ticket_quantity?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_paid?: number
+          created_at?: string
+          currency?: string | null
+          event_id?: string
+          id?: string
+          payment_status?: string | null
+          purchase_date?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          ticket_quantity?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_purchases_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           address: string | null
@@ -425,6 +478,7 @@ export type Database = {
           created_at: string
           event_id: string
           id: string
+          purchase_id: string | null
           user_id: string
         }
         Insert: {
@@ -432,6 +486,7 @@ export type Database = {
           created_at?: string
           event_id: string
           id?: string
+          purchase_id?: string | null
           user_id: string
         }
         Update: {
@@ -439,6 +494,7 @@ export type Database = {
           created_at?: string
           event_id?: string
           id?: string
+          purchase_id?: string | null
           user_id?: string
         }
         Relationships: [
@@ -447,6 +503,13 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_event_attendance_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "event_purchases"
             referencedColumns: ["id"]
           },
           {

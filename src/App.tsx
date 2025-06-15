@@ -12,6 +12,7 @@ import Auth from '@/pages/Auth';
 import Calendar from '@/pages/Calendar';
 import Profile from '@/pages/Profile';
 import EventDetail from '@/pages/EventDetail';
+import PaymentSuccess from '@/pages/PaymentSuccess';
 import AdminLayout from '@/pages/admin/AdminLayout';
 import AdminEvents from '@/pages/admin/AdminEvents';
 import AdminCreateEvent from '@/pages/admin/AdminCreateEvent';
@@ -42,6 +43,7 @@ function App() {
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/notifications" element={<UserNotifications />} />
                     <Route path="/events/:id" element={<EventDetail />} />
+                    <Route path="/payment-success" element={<PaymentSuccess />} />
                     
                     {/* Admin routes */}
                     <Route path="/admin" element={<AdminLayout />}>
