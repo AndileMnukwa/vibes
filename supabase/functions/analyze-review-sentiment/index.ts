@@ -20,34 +20,34 @@ serve(async (req) => {
       throw new Error('Missing required fields: reviewId, title, content');
     }
 
-    // Try to get the API key with more detailed logging
-    const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
-    console.log('Available environment variables:', Object.keys(Deno.env.toObject()));
-    console.log('ANTHROPIC_API_KEY found:', !!anthropicApiKey);
-    console.log('ANTHROPIC_API_KEY length:', anthropicApiKey?.length || 0);
+    // Get the OpenAI API key
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+    console.log('OPENAI_API_KEY found:', !!openaiApiKey);
     
-    if (!anthropicApiKey) {
-      console.error('ANTHROPIC_API_KEY environment variable is not set or is empty');
-      throw new Error('ANTHROPIC_API_KEY not configured - please check Supabase Edge Function secrets');
+    if (!openaiApiKey) {
+      console.error('OPENAI_API_KEY environment variable is not set or is empty');
+      throw new Error('OPENAI_API_KEY not configured - please check Supabase Edge Function secrets');
     }
 
     console.log('Starting sentiment analysis for review:', reviewId);
 
-    // Analyze sentiment using Claude AI
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    // Analyze sentiment using OpenAI GPT
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': anthropicApiKey,
-        'anthropic-version': '2023-06-01',
+        'Authorization': `Bearer ${openaiApiKey}`,
       },
       body: JSON.stringify({
-        model: 'claude-3-haiku-20240307',
-        max_tokens: 1000,
+        model: 'gpt-4o-mini',
         messages: [
           {
+            role: 'system',
+            content: 'You are a helpful assistant that analyzes sentiment of event reviews. Always respond with valid JSON only, no other text.'
+          },
+          {
             role: 'user',
-            content: `Analyze the sentiment of this event review and provide a brief summary. 
+            content: `Analyze the sentiment of this event review and provide a brief summary.
 
 Title: ${title}
 Content: ${content}
@@ -59,22 +59,24 @@ Please respond with a JSON object containing:
 
 Only respond with valid JSON, no other text.`
           }
-        ]
+        ],
+        temperature: 0.3,
+        max_tokens: 500
       }),
     });
 
-    console.log('Anthropic API response status:', response.status);
+    console.log('OpenAI API response status:', response.status);
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Anthropic API error details:', errorText);
-      throw new Error(`Claude API error: ${response.status} - ${errorText}`);
+      console.error('OpenAI API error details:', errorText);
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
-    console.log('Raw Claude response:', JSON.stringify(data));
+    console.log('Raw OpenAI response:', JSON.stringify(data));
     
-    const analysisText = data.content[0].text;
+    const analysisText = data.choices[0].message.content;
     console.log('Analysis text:', analysisText);
     
     let analysis;
@@ -82,7 +84,7 @@ Only respond with valid JSON, no other text.`
       analysis = JSON.parse(analysisText);
     } catch (e) {
       // Fallback if JSON parsing fails
-      console.error('Failed to parse Claude response as JSON:', analysisText);
+      console.error('Failed to parse OpenAI response as JSON:', analysisText);
       analysis = {
         sentiment: 'neutral',
         confidence: 0.5,
