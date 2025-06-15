@@ -1,16 +1,21 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-
-interface PushSubscription {
-  id: string;
-  user_id: string;
-  subscription: any;
-  created_at: string;
-  updated_at: string;
-}
+import { checkPushNotificationSupport } from './push-notifications/supportUtils';
+import { 
+  registerServiceWorker, 
+  requestNotificationPermission, 
+  createPushSubscription, 
+  unsubscribeFromPush 
+} from './push-notifications/serviceWorkerUtils';
+import { 
+  savePushSubscription, 
+  deletePushSubscription, 
+  getUserPushSubscription 
+} from './push-notifications/databaseUtils';
+import { sendTestNotification } from './push-notifications/notificationService';
+import type { PushSubscription } from './push-notifications/types';
 
 export const usePushNotifications = () => {
   const { user } = useAuth();
@@ -22,16 +27,12 @@ export const usePushNotifications = () => {
 
   // Check if push notifications are supported
   useEffect(() => {
-    const checkSupport = () => {
-      const supported = 'serviceWorker' in navigator && 'PushManager' in window;
-      setIsSupported(supported);
-      
-      if (!supported) {
-        console.log('Push notifications are not supported in this browser');
-      }
-    };
-
-    checkSupport();
+    const supported = checkPushNotificationSupport();
+    setIsSupported(supported);
+    
+    if (!supported) {
+      console.log('Push notifications are not supported in this browser');
+    }
   }, []);
 
   // Check existing subscription
@@ -40,17 +41,7 @@ export const usePushNotifications = () => {
       if (!user || !isSupported) return;
 
       try {
-        const { data, error } = await supabase
-          .from('push_subscriptions')
-          .select('*')
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-        if (error) {
-          console.error('Error checking subscription:', error);
-          return;
-        }
-
+        const data = await getUserPushSubscription(user.id);
         if (data) {
           setSubscription(data);
           setIsSubscribed(true);
@@ -71,10 +62,10 @@ export const usePushNotifications = () => {
     
     try {
       // Register service worker
-      const registration = await navigator.serviceWorker.register('/sw.js');
+      const registration = await registerServiceWorker();
       
       // Request notification permission
-      const permission = await Notification.requestPermission();
+      const permission = await requestNotificationPermission();
       
       if (permission !== 'granted') {
         toast({
@@ -86,26 +77,11 @@ export const usePushNotifications = () => {
       }
 
       // Create push subscription
-      const pushSubscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: 'your-vapid-public-key', // Replace with actual VAPID key
-      });
+      const pushSubscription = await createPushSubscription(registration);
 
       // Convert PushSubscriptionJSON to JSON and save to database
       const subscriptionJson = pushSubscription.toJSON();
-      
-      const { data, error } = await supabase
-        .from('push_subscriptions')
-        .insert({
-          user_id: user.id,
-          subscription: subscriptionJson as any, // Cast to any to handle Json type
-        })
-        .select()
-        .single();
-
-      if (error) {
-        throw error;
-      }
+      const data = await savePushSubscription(user.id, subscriptionJson);
 
       setSubscription(data);
       setIsSubscribed(true);
@@ -134,23 +110,10 @@ export const usePushNotifications = () => {
 
     try {
       // Remove from database
-      const { error } = await supabase
-        .from('push_subscriptions')
-        .delete()
-        .eq('id', subscription.id);
-
-      if (error) {
-        throw error;
-      }
+      await deletePushSubscription(subscription.id);
 
       // Unsubscribe from browser
-      const registration = await navigator.serviceWorker.getRegistration();
-      if (registration) {
-        const pushSubscription = await registration.pushManager.getSubscription();
-        if (pushSubscription) {
-          await pushSubscription.unsubscribe();
-        }
-      }
+      await unsubscribeFromPush();
 
       setSubscription(null);
       setIsSubscribed(false);
@@ -172,25 +135,16 @@ export const usePushNotifications = () => {
   }, [user, isSubscribed, subscription, toast]);
 
   // Send test notification (for development)
-  const sendTestNotification = useCallback(async () => {
+  const sendTestNotificationHandler = useCallback(async () => {
     if (!isSubscribed || !subscription) return;
 
     try {
-      const { error } = await supabase.functions.invoke('send-push-notification', {
-        body: {
-          subscription: subscription.subscription,
-          payload: {
-            title: 'Test Notification',
-            body: 'This is a test push notification!',
-            icon: '/icon-192x192.png',
-            badge: '/badge-72x72.png',
-          },
-        },
+      await sendTestNotification(subscription.subscription, {
+        title: 'Test Notification',
+        body: 'This is a test push notification!',
+        icon: '/icon-192x192.png',
+        badge: '/badge-72x72.png',
       });
-
-      if (error) {
-        throw error;
-      }
 
       toast({
         title: 'Test Sent',
@@ -213,6 +167,6 @@ export const usePushNotifications = () => {
     subscription,
     subscribe,
     unsubscribe,
-    sendTestNotification,
+    sendTestNotification: sendTestNotificationHandler,
   };
 };
