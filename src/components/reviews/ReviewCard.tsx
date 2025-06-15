@@ -66,7 +66,12 @@ export const ReviewCard = ({ review }: ReviewCardProps) => {
         .from('review_responses')
         .select(`
           *,
-          profiles (*)
+          profiles (
+            id,
+            full_name,
+            username,
+            avatar_url
+          )
         `)
         .eq('review_id', review.id)
         .order('created_at', { ascending: true });
