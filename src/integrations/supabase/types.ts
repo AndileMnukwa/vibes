@@ -382,6 +382,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_admin_user_ids: {
+        Args: Record<PropertyKey, never>
+        Returns: string[]
+      }
       get_user_role: {
         Args: { user_uuid: string }
         Returns: Database["public"]["Enums"]["app_role"]
@@ -395,6 +399,7 @@ export type Database = {
         | "review_response"
         | "event_reminder"
         | "system"
+        | "new_review"
       review_status: "pending" | "approved" | "rejected"
     }
     CompositeTypes: {
@@ -518,6 +523,7 @@ export const Constants = {
         "review_response",
         "event_reminder",
         "system",
+        "new_review",
       ],
       review_status: ["pending", "approved", "rejected"],
     },
