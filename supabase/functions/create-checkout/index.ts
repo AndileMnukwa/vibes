@@ -58,15 +58,21 @@ serve(async (req) => {
     logStep("Event found", { eventId, price: event.ticket_price });
 
     // Check if user already has a purchase for this event
-    const { data: existingPurchase } = await supabaseClient
+    logStep("Checking for existing purchase", { userId: user.id, eventId });
+    const { data: existingPurchase, error: existingPurchaseError } = await supabaseClient
       .from('event_purchases')
       .select('*')
       .eq('user_id', user.id)
       .eq('event_id', eventId)
-      .eq('payment_status', 'paid')
       .maybeSingle();
 
-    if (existingPurchase) {
+    if (existingPurchaseError) {
+      logStep("Error checking for existing purchase", existingPurchaseError);
+      throw new Error("Could not check for existing purchases.");
+    }
+    
+    if (existingPurchase && existingPurchase.payment_status === 'paid') {
+      logStep("User has already paid for this event", { purchaseId: existingPurchase.id });
       throw new Error("You have already purchased a ticket for this event");
     }
 
@@ -108,23 +114,42 @@ serve(async (req) => {
 
     logStep("Checkout session created", { sessionId: session.id });
 
-    // Create purchase record
-    const { error: purchaseError } = await supabaseClient
-      .from('event_purchases')
-      .insert({
-        user_id: user.id,
-        event_id: eventId,
-        stripe_session_id: session.id,
-        amount_paid: Math.round(event.ticket_price * 100),
-        payment_status: 'pending',
-      });
+    if (existingPurchase) {
+      // Update existing pending purchase record
+      logStep("Updating existing pending purchase", { purchaseId: existingPurchase.id });
+      const { error: updateError } = await supabaseClient
+        .from('event_purchases')
+        .update({
+          stripe_session_id: session.id,
+          updated_at: new Date().toISOString(),
+          payment_status: 'pending', // Ensure it's reset to pending
+        })
+        .eq('id', existingPurchase.id);
 
-    if (purchaseError) {
-      logStep("Error creating purchase record", purchaseError);
-      throw new Error("Failed to create purchase record");
+      if (updateError) {
+        logStep("Error updating purchase record", updateError);
+        throw new Error("Failed to update purchase record");
+      }
+      logStep("Existing purchase record updated");
+    } else {
+      // Create new purchase record
+      logStep("Creating new purchase record");
+      const { error: purchaseError } = await supabaseClient
+        .from('event_purchases')
+        .insert({
+          user_id: user.id,
+          event_id: eventId,
+          stripe_session_id: session.id,
+          amount_paid: Math.round(event.ticket_price * 100),
+          payment_status: 'pending',
+        });
+
+      if (purchaseError) {
+        logStep("Error creating purchase record", purchaseError);
+        throw new Error("Failed to create purchase record");
+      }
+      logStep("Purchase record created");
     }
-
-    logStep("Purchase record created");
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
