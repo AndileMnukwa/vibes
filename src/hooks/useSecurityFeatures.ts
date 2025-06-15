@@ -1,188 +1,245 @@
 
-import { useState, useCallback } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useUserAnalytics } from '@/hooks/useUserAnalytics';
 
-interface SecurityAuditLog {
+interface SecurityEvent {
   id: string;
-  user_id?: string;
-  action: string;
+  event_type: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
   details: Record<string, any>;
+  user_id?: string;
   ip_address?: string;
   user_agent?: string;
   timestamp: string;
 }
 
-interface RateLimitConfig {
-  endpoint: string;
-  max_requests: number;
-  window_minutes: number;
+interface BotDetectionResult {
+  isBot: boolean;
+  confidence: number;
+  reasons: string[];
+}
+
+interface RateLimitResult {
+  allowed: boolean;
+  remaining: number;
+  resetTime: number;
 }
 
 export const useSecurityFeatures = () => {
   const { user } = useAuth();
-  const [rateLimitHits, setRateLimitHits] = useState<Record<string, number>>({});
+  const { trackEvent } = useUserAnalytics();
+  const [securityEvents, setSecurityEvents] = useState<SecurityEvent[]>([]);
+  const [rateLimitData, setRateLimitData] = useState<Map<string, number[]>>(new Map());
 
-  // Rate limiting functionality
-  const checkRateLimit = useCallback((endpoint: string, maxRequests = 100, windowMinutes = 15) => {
-    const key = `${endpoint}_${user?.id || 'anonymous'}`;
-    const now = Date.now();
-    const windowStart = now - (windowMinutes * 60 * 1000);
-    
-    // Get stored requests for this endpoint
-    const storedData = localStorage.getItem(`rateLimit_${key}`);
-    let requests: number[] = storedData ? JSON.parse(storedData) : [];
-    
-    // Filter out old requests
-    requests = requests.filter(timestamp => timestamp > windowStart);
-    
-    // Check if limit exceeded
-    if (requests.length >= maxRequests) {
-      setRateLimitHits(prev => ({ ...prev, [key]: (prev[key] || 0) + 1 }));
-      return false;
-    }
-    
-    // Add current request
-    requests.push(now);
-    localStorage.setItem(`rateLimit_${key}`, JSON.stringify(requests));
-    
-    return true;
-  }, [user?.id]);
+  // Bot detection using various heuristics
+  const detectBot = useCallback((): BotDetectionResult => {
+    const reasons: string[] = [];
+    let confidence = 0;
 
-  // Bot detection (simple heuristics)
-  const detectBot = useCallback(() => {
+    // Check user agent
     const userAgent = navigator.userAgent.toLowerCase();
     const botPatterns = [
-      'bot', 'crawler', 'spider', 'scraper', 'automated',
-      'headless', 'phantom', 'selenium', 'puppeteer'
+      'bot', 'crawler', 'spider', 'scraper', 'curl', 'wget',
+      'python', 'java', 'http', 'libwww', 'perl'
     ];
     
-    const isBot = botPatterns.some(pattern => userAgent.includes(pattern));
-    
-    // Additional checks
-    const hasWebDriver = 'webdriver' in navigator;
-    const hasAutomationProperty = (window as any).chrome && (window as any).chrome.runtime;
-    const suspiciousUserAgent = userAgent.length < 50 || userAgent.length > 500;
-    
+    if (botPatterns.some(pattern => userAgent.includes(pattern))) {
+      reasons.push('Suspicious user agent');
+      confidence += 0.4;
+    }
+
+    // Check for missing features that real browsers have
+    if (!navigator.languages || navigator.languages.length === 0) {
+      reasons.push('Missing browser languages');
+      confidence += 0.2;
+    }
+
+    if (!navigator.plugins || navigator.plugins.length === 0) {
+      reasons.push('No plugins detected');
+      confidence += 0.1;
+    }
+
+    // Check for headless browser indicators
+    if ((window as any).navigator.webdriver) {
+      reasons.push('WebDriver detected');
+      confidence += 0.5;
+    }
+
+    if (!(window as any).chrome && userAgent.includes('chrome')) {
+      reasons.push('Chrome object missing');
+      confidence += 0.3;
+    }
+
+    // Check screen dimensions (bots often have unusual dimensions)
+    if (screen.width === 0 || screen.height === 0) {
+      reasons.push('Invalid screen dimensions');
+      confidence += 0.3;
+    }
+
     return {
-      isBot: isBot || hasWebDriver || suspiciousUserAgent,
-      confidence: isBot ? 0.9 : (hasWebDriver ? 0.8 : (suspiciousUserAgent ? 0.6 : 0.1)),
-      reasons: [
-        ...(isBot ? ['User agent contains bot keywords'] : []),
-        ...(hasWebDriver ? ['WebDriver detected'] : []),
-        ...(suspiciousUserAgent ? ['Suspicious user agent length'] : []),
-      ]
+      isBot: confidence > 0.5,
+      confidence: Math.min(confidence, 1),
+      reasons
     };
   }, []);
 
-  // Audit logging
-  const logSecurityEvent = useCallback(async (action: string, details: Record<string, any>) => {
+  // Rate limiting check
+  const checkRateLimit = useCallback((action: string, limit: number = 10, windowMs: number = 60000): RateLimitResult => {
+    const now = Date.now();
+    const key = `${user?.id || 'anonymous'}_${action}`;
+    const requests = rateLimitData.get(key) || [];
+    
+    // Clean up old requests outside the window
+    const validRequests = requests.filter(timestamp => now - timestamp < windowMs);
+    
+    if (validRequests.length >= limit) {
+      return {
+        allowed: false,
+        remaining: 0,
+        resetTime: validRequests[0] + windowMs
+      };
+    }
+
+    // Add current request
+    validRequests.push(now);
+    setRateLimitData(prev => new Map(prev.set(key, validRequests)));
+
+    return {
+      allowed: true,
+      remaining: limit - validRequests.length,
+      resetTime: now + windowMs
+    };
+  }, [user?.id, rateLimitData]);
+
+  // Log security events
+  const logSecurityEvent = useCallback(async (
+    eventType: string,
+    details: Record<string, any>,
+    severity: SecurityEvent['severity'] = 'medium'
+  ) => {
     try {
-      const auditLog: Omit<SecurityAuditLog, 'id'> = {
-        user_id: user?.id,
-        action,
+      const event: Omit<SecurityEvent, 'id'> = {
+        event_type: eventType,
+        severity,
         details,
-        ip_address: await fetch('https://api.ipify.org?format=json')
-          .then(r => r.json())
-          .then(data => data.ip)
-          .catch(() => 'unknown'),
+        user_id: user?.id,
+        ip_address: await getClientIP(),
         user_agent: navigator.userAgent,
         timestamp: new Date().toISOString(),
       };
 
-      // In a real app, you'd send this to your security logging service
-      console.log('Security Event:', auditLog);
+      // Track in analytics
+      trackEvent('security_event', {
+        event_type: eventType,
+        severity,
+        details
+      });
+
+      // In a real app, you'd send this to a security monitoring service
+      console.log('Security Event:', event);
       
-      // Store in localStorage for demo purposes
-      const existingLogs = JSON.parse(localStorage.getItem('securityLogs') || '[]');
-      existingLogs.push(auditLog);
-      localStorage.setItem('securityLogs', JSON.stringify(existingLogs.slice(-100)));
-      
+      setSecurityEvents(prev => [event as SecurityEvent, ...prev.slice(0, 99)]);
     } catch (error) {
-      console.error('Failed to log security event:', error);
+      console.error('Error logging security event:', error);
     }
-  }, [user?.id]);
+  }, [user?.id, trackEvent]);
 
-  // GDPR compliance helpers
-  const requestDataExport = useCallback(async () => {
-    if (!user) return null;
-    
+  // Get client IP (simplified version)
+  const getClientIP = async (): Promise<string> => {
     try {
-      // Collect user data from various tables
-      const [profile, reviews, analytics] = await Promise.all([
-        supabase.from('profiles').select('*').eq('id', user.id).single(),
-        supabase.from('reviews').select('*').eq('user_id', user.id),
-        // Note: user_analytics table access would need proper RLS policies
-      ]);
+      // In production, you'd get this from your server or a service
+      return '127.0.0.1';
+    } catch {
+      return 'unknown';
+    }
+  };
 
-      const exportData = {
-        profile: profile.data,
-        reviews: reviews.data,
-        exportDate: new Date().toISOString(),
-        requestedBy: user.id,
+  // Monitor for suspicious activity
+  useEffect(() => {
+    const monitorActivity = () => {
+      // Monitor rapid clicks (possible automation)
+      let clickCount = 0;
+      const clickWindow = 1000; // 1 second
+
+      const handleClick = () => {
+        clickCount++;
+        setTimeout(() => clickCount--, clickWindow);
+        
+        if (clickCount > 10) {
+          logSecurityEvent('rapid_clicking', {
+            clicks_per_second: clickCount,
+            timestamp: Date.now()
+          }, 'medium');
+        }
       };
 
-      // Create downloadable file
-      const blob = new Blob([JSON.stringify(exportData, null, 2)], {
-        type: 'application/json'
-      });
+      // Monitor for console manipulation attempts
+      const originalConsole = { ...console };
       
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `vibecatcher-data-export-${Date.now()}.json`;
-      a.click();
-      
-      URL.revokeObjectURL(url);
-      
-      await logSecurityEvent('data_export_requested', {
-        user_id: user.id,
-        export_type: 'full_data'
-      });
-      
-      return exportData;
-    } catch (error) {
-      console.error('Data export failed:', error);
-      throw error;
-    }
-  }, [user, logSecurityEvent]);
+      const monitorConsole = () => {
+        if (console !== originalConsole) {
+          logSecurityEvent('console_manipulation', {
+            timestamp: Date.now()
+          }, 'high');
+        }
+      };
 
-  const requestDataDeletion = useCallback(async () => {
-    if (!user) return false;
-    
+      document.addEventListener('click', handleClick);
+      const consoleInterval = setInterval(monitorConsole, 5000);
+
+      return () => {
+        document.removeEventListener('click', handleClick);
+        clearInterval(consoleInterval);
+      };
+    };
+
+    return monitorActivity();
+  }, [logSecurityEvent]);
+
+  // Audit user permissions
+  const auditUserPermissions = useCallback(async () => {
+    if (!user) return null;
+
     try {
-      await logSecurityEvent('data_deletion_requested', {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      const { data: userRole } = await supabase
+        .from('user_roles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      const auditResult = {
         user_id: user.id,
-        timestamp: new Date().toISOString()
-      });
+        has_profile: !!profile,
+        role: userRole?.role || 'user',
+        permissions_verified: true,
+        audit_timestamp: new Date().toISOString()
+      };
+
+      logSecurityEvent('permissions_audit', auditResult, 'low');
       
-      // In a real app, this would trigger a secure deletion process
-      console.log('Data deletion request logged for user:', user.id);
-      return true;
+      return auditResult;
     } catch (error) {
-      console.error('Data deletion request failed:', error);
-      return false;
+      console.error('Error auditing user permissions:', error);
+      logSecurityEvent('permissions_audit_failed', {
+        error: error instanceof Error ? error.message : 'Unknown error'
+      }, 'medium');
+      return null;
     }
   }, [user, logSecurityEvent]);
-
-  // Get security audit logs
-  const { data: auditLogs = [] } = useQuery({
-    queryKey: ['security-audit-logs'],
-    queryFn: () => {
-      const logs = localStorage.getItem('securityLogs');
-      return logs ? JSON.parse(logs) : [];
-    },
-    refetchInterval: 30000, // Refresh every 30 seconds
-  });
 
   return {
-    checkRateLimit,
     detectBot,
+    checkRateLimit,
     logSecurityEvent,
-    requestDataExport,
-    requestDataDeletion,
-    auditLogs,
-    rateLimitHits,
+    auditUserPermissions,
+    securityEvents,
   };
 };

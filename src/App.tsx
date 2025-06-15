@@ -31,8 +31,8 @@ function App() {
       <AuthProvider>
         <SearchProvider>
           <LocationProvider>
-            <EnhancedApp>
-              <BrowserRouter>
+            <BrowserRouter>
+              <EnhancedApp>
                 <div className="min-h-screen bg-background">
                   <Toaster />
                   <Routes>
@@ -57,8 +57,8 @@ function App() {
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </div>
-              </BrowserRouter>
-            </EnhancedApp>
+              </EnhancedApp>
+            </BrowserRouter>
           </LocationProvider>
         </SearchProvider>
       </AuthProvider>
