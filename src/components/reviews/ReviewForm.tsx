@@ -78,9 +78,19 @@ export const ReviewForm = ({ eventId, onSuccess }: ReviewFormProps) => {
       onSuccess();
     },
     onError: (error: any) => {
+      console.error('Review submission error:', error);
+      
+      let errorMessage = error.message;
+      
+      // Handle specific constraint violation error
+      if (error.message?.includes('reviews_event_id_user_id_key') || 
+          error.message?.includes('duplicate key value violates unique constraint')) {
+        errorMessage = 'You have already submitted a review for this event. Each user can only review an event once.';
+      }
+      
       toast({
         title: 'Error submitting review',
-        description: error.message,
+        description: errorMessage,
         variant: 'destructive',
       });
     },
