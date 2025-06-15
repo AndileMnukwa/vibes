@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -34,8 +33,8 @@ export const NotificationBell = () => {
     }
 
     // Navigate based on notification type
-    if (notification.type === 'new_review' && notification.data?.event_id) {
-      navigate(`/events/${notification.data.event_id}`);
+    if (notification.type === 'new_review' && notification.data?.review_id) {
+      navigate(`/admin/reviews?reviewId=${notification.data.review_id}`);
     }
 
     setIsOpen(false);

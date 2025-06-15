@@ -1,11 +1,13 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AdminReviewsTable } from '@/components/admin/reviews/AdminReviewsTable';
 import { ReviewFilterBar } from '@/components/admin/reviews/ReviewFilterBar';
 import { ReviewStatsCards } from '@/components/admin/reviews/ReviewStatsCards';
+import { ReviewDetailsModal } from '@/components/admin/reviews/ReviewDetailsModal';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -28,6 +30,10 @@ export interface ReviewSort {
 }
 
 const AdminReviews = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const reviewIdParam = searchParams.get('reviewId');
+  const [selectedReview, setSelectedReview] = useState<ReviewWithDetails | null>(null);
+  
   const [filters, setFilters] = useState<ReviewFilters>({
     status: 'all',
     rating: 'all',
@@ -92,6 +98,20 @@ const AdminReviews = () => {
     },
   });
 
+  // Handle reviewId URL parameter - automatically open the review details modal
+  useEffect(() => {
+    if (reviewIdParam && reviews.length > 0) {
+      const targetReview = reviews.find(review => review.id === reviewIdParam);
+      if (targetReview) {
+        setSelectedReview(targetReview);
+        // Remove the reviewId parameter from URL after opening the modal
+        const newSearchParams = new URLSearchParams(searchParams);
+        newSearchParams.delete('reviewId');
+        setSearchParams(newSearchParams, { replace: true });
+      }
+    }
+  }, [reviewIdParam, reviews, searchParams, setSearchParams]);
+
   const filteredStats = useMemo(() => {
     return {
       total: reviews.length,
@@ -103,6 +123,11 @@ const AdminReviews = () => {
         : 0,
     };
   }, [reviews]);
+
+  const handleStatusUpdate = (reviewId: string, status: 'approved' | 'rejected') => {
+    // This function will be passed to the table and modal components
+    refetch();
+  };
 
   if (isLoading) {
     return (
@@ -158,9 +183,20 @@ const AdminReviews = () => {
           <AdminReviewsTable
             reviews={reviews}
             onRefresh={refetch}
+            onReviewSelect={setSelectedReview}
           />
         </CardContent>
       </Card>
+
+      {selectedReview && (
+        <ReviewDetailsModal
+          review={selectedReview}
+          isOpen={!!selectedReview}
+          onClose={() => setSelectedReview(null)}
+          onStatusUpdate={handleStatusUpdate}
+          onRefresh={refetch}
+        />
+      )}
     </div>
   );
 };

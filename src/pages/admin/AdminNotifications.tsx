@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,8 +28,8 @@ const AdminNotifications = () => {
       markAsRead(notification.id);
     }
 
-    if (notification.type === 'new_review' && notification.data?.event_id) {
-      navigate(`/events/${notification.data.event_id}`);
+    if (notification.type === 'new_review' && notification.data?.review_id) {
+      navigate(`/admin/reviews?reviewId=${notification.data.review_id}`);
     }
   };
 
