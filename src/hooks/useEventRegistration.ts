@@ -49,26 +49,65 @@ export const useEventRegistration = (eventId: string) => {
     enabled: !!user && !!eventId,
   });
 
+  // Check if user has a ticket for this event
+  const { data: hasTicket } = useQuery({
+    queryKey: ['event-ticket', eventId, user?.id],
+    queryFn: async () => {
+      if (!user) return false;
+      
+      const { data, error } = await supabase
+        .from('tickets')
+        .select('id, validation_status')
+        .eq('event_id', eventId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (error) throw error;
+      return !!data;
+    },
+    enabled: !!user && !!eventId,
+  });
+
   // Register for free event mutation
   const registerMutation = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error('User not authenticated');
       
-      const { error } = await supabase
+      const { data: attendance, error } = await supabase
         .from('user_event_attendance')
         .insert({
           event_id: eventId,
           user_id: user.id,
           attendance_status: 'going'
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
+
+      // Create ticket for free event
+      const { data: ticketData, error: ticketError } = await supabase.functions.invoke('create-ticket', {
+        body: {
+          userId: user.id,
+          eventId,
+          attendanceId: attendance.id
+        }
+      });
+
+      if (ticketError) {
+        console.error('Ticket creation failed:', ticketError);
+        // Don't fail registration if ticket creation fails
+      }
+
+      return attendance;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['event-registration', eventId, user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['event-ticket', eventId, user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['user-tickets', user?.id] });
       toast({
         title: "Registration Successful",
-        description: "You have successfully registered for this event!",
+        description: "You have successfully registered for this event! Your ticket has been generated.",
       });
     },
     onError: (error) => {
@@ -125,6 +164,8 @@ export const useEventRegistration = (eventId: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['event-registration', eventId, user?.id] });
       queryClient.invalidateQueries({ queryKey: ['event-purchase', eventId, user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['event-ticket', eventId, user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['user-tickets', user?.id] });
       toast({
         title: "Unregistered Successfully",
         description: "You have been unregistered from this event.",
@@ -161,6 +202,7 @@ export const useEventRegistration = (eventId: string) => {
   return {
     isRegistered: !!isRegistered,
     hasPaidTicket: !!hasPaidTicket,
+    hasTicket: !!hasTicket,
     isLoading: checkingRegistration || isLoading || registerMutation.isPending || purchaseTicketMutation.isPending || unregisterMutation.isPending,
     register,
     purchaseTicket,

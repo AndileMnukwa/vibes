@@ -436,6 +436,76 @@ export type Database = {
           },
         ]
       }
+      tickets: {
+        Row: {
+          attendance_id: string | null
+          created_at: string
+          event_id: string
+          generated_at: string
+          id: string
+          purchase_id: string | null
+          qr_code_data: string
+          ticket_number: string
+          updated_at: string
+          user_id: string
+          validated_at: string | null
+          validated_by: string | null
+          validation_status: string | null
+        }
+        Insert: {
+          attendance_id?: string | null
+          created_at?: string
+          event_id: string
+          generated_at?: string
+          id?: string
+          purchase_id?: string | null
+          qr_code_data: string
+          ticket_number: string
+          updated_at?: string
+          user_id: string
+          validated_at?: string | null
+          validated_by?: string | null
+          validation_status?: string | null
+        }
+        Update: {
+          attendance_id?: string | null
+          created_at?: string
+          event_id?: string
+          generated_at?: string
+          id?: string
+          purchase_id?: string | null
+          qr_code_data?: string
+          ticket_number?: string
+          updated_at?: string
+          user_id?: string
+          validated_at?: string | null
+          validated_by?: string | null
+          validation_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tickets_attendance_id_fkey"
+            columns: ["attendance_id"]
+            isOneToOne: false
+            referencedRelation: "user_event_attendance"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "event_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_analytics: {
         Row: {
           created_at: string
@@ -580,6 +650,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_ticket_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_admin_user_ids: {
         Args: Record<PropertyKey, never>
         Returns: string[]

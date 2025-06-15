@@ -61,7 +61,7 @@ serve(async (req) => {
       logStep("Purchase updated", { purchaseId: purchase.id });
 
       // Create or update attendance record
-      const { error: attendanceError } = await supabaseClient
+      const { data: attendance, error: attendanceError } = await supabaseClient
         .from('user_event_attendance')
         .upsert({
           user_id: purchase.user_id,
@@ -70,13 +70,36 @@ serve(async (req) => {
           purchase_id: purchase.id,
         }, {
           onConflict: 'user_id,event_id'
-        });
+        })
+        .select()
+        .single();
 
       if (attendanceError) {
         logStep("Error creating attendance record", attendanceError);
         // Don't throw here as payment is already processed
       } else {
         logStep("Attendance record created/updated");
+      }
+
+      // Create ticket automatically
+      try {
+        const { data: ticketData, error: ticketError } = await supabaseClient.functions.invoke('create-ticket', {
+          body: {
+            userId: purchase.user_id,
+            eventId: purchase.event_id,
+            purchaseId: purchase.id,
+            attendanceId: attendance?.id || null
+          }
+        });
+
+        if (ticketError) {
+          logStep("Error creating ticket", ticketError);
+        } else {
+          logStep("Ticket created", ticketData);
+        }
+      } catch (ticketCreationError) {
+        logStep("Ticket creation failed", ticketCreationError);
+        // Don't fail the whole payment process if ticket creation fails
       }
 
       return new Response(JSON.stringify({ 

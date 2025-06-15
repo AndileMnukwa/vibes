@@ -4,9 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { DollarSign, Users, CheckCircle, CreditCard } from 'lucide-react';
+import { DollarSign, Users, CheckCircle, CreditCard, Download, Ticket } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEventRegistration } from '@/hooks/useEventRegistration';
+import { useTickets } from '@/hooks/useTickets';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Event = Tables<'events'> & {
@@ -21,10 +22,14 @@ interface EventDetailSidebarProps {
 export const EventDetailSidebar = ({ event }: EventDetailSidebarProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { isRegistered, hasPaidTicket, isLoading, register, purchaseTicket, unregister } = useEventRegistration(event.id);
+  const { isRegistered, hasPaidTicket, hasTicket, isLoading, register, purchaseTicket, unregister } = useEventRegistration(event.id);
+  const { tickets, downloadTicket, isDownloading } = useTickets();
 
   const isPaidEvent = event.ticket_price && event.ticket_price > 0;
   const isEventPast = new Date(event.event_date) < new Date();
+
+  // Find the ticket for this specific event
+  const eventTicket = tickets.find(ticket => ticket.event_id === event.id);
 
   const handleRegistrationClick = () => {
     if (!user) {
@@ -127,6 +132,20 @@ export const EventDetailSidebar = ({ event }: EventDetailSidebarProps) => {
             {isEventPast ? 'Event Ended' : getButtonText()}
           </Button>
 
+          {/* Show ticket download button if user has a ticket */}
+          {hasTicket && eventTicket && (
+            <Button 
+              variant="secondary" 
+              size="lg" 
+              className="w-full"
+              onClick={() => downloadTicket(eventTicket.id)}
+              disabled={isDownloading}
+            >
+              <Download className="mr-2 h-4 w-4" />
+              {isDownloading ? 'Generating...' : 'Download Ticket'}
+            </Button>
+          )}
+
           {(isRegistered || hasPaidTicket) && !isEventPast && (
             <Button 
               variant="ghost" 
@@ -143,6 +162,13 @@ export const EventDetailSidebar = ({ event }: EventDetailSidebarProps) => {
             <p className="text-sm text-muted-foreground text-center">
               Secure payment processed by Stripe
             </p>
+          )}
+
+          {hasTicket && (
+            <div className="flex items-center justify-center gap-2 text-sm text-green-600 bg-green-50 p-2 rounded">
+              <Ticket className="w-4 h-4" />
+              <span>Ticket Available</span>
+            </div>
           )}
         </CardContent>
       </Card>

@@ -4,10 +4,11 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, Calendar, MapPin, ArrowRight } from 'lucide-react';
+import { CheckCircle, Calendar, MapPin, ArrowRight, Download, Ticket } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useTickets } from '@/hooks/useTickets';
 
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
@@ -16,6 +17,7 @@ const PaymentSuccess = () => {
   const [verifying, setVerifying] = useState(true);
   const [eventDetails, setEventDetails] = useState(null);
   const [purchaseDetails, setPurchaseDetails] = useState(null);
+  const { tickets, downloadTicket, isDownloading } = useTickets();
 
   useEffect(() => {
     const verifyPayment = async () => {
@@ -60,7 +62,7 @@ const PaymentSuccess = () => {
           
           toast({
             title: "Payment Successful!",
-            description: "Your ticket has been confirmed.",
+            description: "Your ticket has been confirmed and generated.",
           });
         } else {
           throw new Error(data.error || 'Payment verification failed');
@@ -81,6 +83,10 @@ const PaymentSuccess = () => {
     verifyPayment();
   }, [sessionId, navigate]);
 
+  // Find the ticket for this event
+  const eventTicket = eventDetails && tickets ? 
+    tickets.find(ticket => ticket.event_id === eventDetails.id) : null;
+
   if (verifying) {
     return (
       <Layout>
@@ -88,7 +94,7 @@ const PaymentSuccess = () => {
           <div className="text-center mb-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-4"></div>
             <h1 className="text-2xl font-bold mb-2">Verifying Payment...</h1>
-            <p className="text-muted-foreground">Please wait while we confirm your purchase.</p>
+            <p className="text-muted-foreground">Please wait while we confirm your purchase and generate your ticket.</p>
           </div>
           <Card>
             <CardHeader>
@@ -129,9 +135,34 @@ const PaymentSuccess = () => {
           </div>
           <h1 className="text-3xl font-bold text-green-600 mb-2">Payment Successful!</h1>
           <p className="text-lg text-muted-foreground">
-            Your ticket has been confirmed and you're all set!
+            Your ticket has been confirmed and generated!
           </p>
         </div>
+
+        {/* Ticket Download Card */}
+        {eventTicket && (
+          <Card className="mb-6 border-green-200 bg-green-50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-green-700">
+                <Ticket className="w-5 h-5" />
+                Your Ticket is Ready
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-green-600 mb-4">
+                Your digital ticket has been automatically generated and is ready for download.
+              </p>
+              <Button 
+                onClick={() => downloadTicket(eventTicket.id)}
+                disabled={isDownloading}
+                className="w-full bg-green-600 hover:bg-green-700"
+              >
+                <Download className="mr-2 h-4 w-4" />
+                {isDownloading ? 'Generating PDF...' : 'Download Ticket PDF'}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Event Details Card */}
         <Card className="mb-6">
@@ -205,10 +236,10 @@ const PaymentSuccess = () => {
           </Button>
           <Button 
             variant="outline" 
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/my-tickets')}
             className="flex-1"
           >
-            Browse More Events
+            View All Tickets
           </Button>
         </div>
 
@@ -216,7 +247,7 @@ const PaymentSuccess = () => {
         <div className="mt-8 p-4 bg-blue-50 rounded-lg">
           <p className="text-sm text-blue-700">
             📧 A confirmation email with your ticket details has been sent to your email address.
-            Please present this confirmation or your email at the event entrance.
+            You can also download your ticket anytime from the "My Tickets" section.
           </p>
         </div>
       </div>
