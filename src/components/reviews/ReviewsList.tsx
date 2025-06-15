@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,7 @@ interface ReviewsListProps {
 export const ReviewsList = ({ eventId }: ReviewsListProps) => {
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'highest' | 'lowest' | 'helpful'>('newest');
+  const queryClient = useQueryClient();
 
   const { data: reviews = [], isLoading, error } = useQuery({
     queryKey: ['reviews', eventId, sortBy],
@@ -61,10 +62,12 @@ export const ReviewsList = ({ eventId }: ReviewsListProps) => {
     },
   });
 
-  // Real-time subscription for review responses
+  // Real-time subscription for review responses - fixed to prevent multiple subscriptions
   useEffect(() => {
+    const channelName = `review-responses-${eventId}`;
+    
     const channel = supabase
-      .channel('review-responses-changes')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -75,6 +78,7 @@ export const ReviewsList = ({ eventId }: ReviewsListProps) => {
         () => {
           // Invalidate review responses queries when there are changes
           console.log('Review response updated, refreshing...');
+          queryClient.invalidateQueries({ queryKey: ['reviews', eventId] });
         }
       )
       .subscribe();
@@ -82,7 +86,7 @@ export const ReviewsList = ({ eventId }: ReviewsListProps) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [eventId, queryClient]);
 
   if (isLoading) {
     return (

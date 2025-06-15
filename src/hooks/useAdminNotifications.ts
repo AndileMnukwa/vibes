@@ -1,6 +1,6 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -13,6 +13,7 @@ export function useAdminNotifications() {
   const { user } = useAuth();
   const { isAdmin } = useUserRole();
   const queryClient = useQueryClient();
+  const channelRef = useRef<any>(null);
 
   // Fetch notifications
   const { data: notifications = [], isLoading } = useQuery({
@@ -69,12 +70,20 @@ export function useAdminNotifications() {
     },
   });
 
-  // Real-time subscription for new notifications
+  // Real-time subscription for new notifications - fixed to prevent multiple subscriptions
   useEffect(() => {
     if (!user || !isAdmin) return;
 
+    // Clean up existing channel if it exists
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
+
+    const channelName = `admin-notifications-${user.id}`;
+    
     const channel = supabase
-      .channel('admin-notifications')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -100,8 +109,13 @@ export function useAdminNotifications() {
       )
       .subscribe();
 
+    channelRef.current = channel;
+
     return () => {
-      supabase.removeChannel(channel);
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
     };
   }, [user, isAdmin, queryClient]);
 
