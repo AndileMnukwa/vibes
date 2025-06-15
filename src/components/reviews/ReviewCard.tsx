@@ -7,7 +7,7 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Star, ThumbsUp, ThumbsDown, Reply, MessageSquare } from 'lucide-react';
+import { Star, ThumbsUp, ThumbsDown, Reply, MessageSquare, Clock, X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { SentimentIndicator } from './SentimentIndicator';
 import { ReviewResponse } from './ReviewResponse';
@@ -57,6 +57,9 @@ export const ReviewCard = ({ review }: ReviewCardProps) => {
   const { isAdmin } = useUserRole();
   const queryClient = useQueryClient();
   const [showResponseForm, setShowResponseForm] = useState(false);
+
+  // Check if this is the current user's review
+  const isOwnReview = user?.id === review.user_id;
 
   // Fetch admin responses for this review
   const { data: responses = [] } = useQuery({
@@ -137,6 +140,27 @@ export const ReviewCard = ({ review }: ReviewCardProps) => {
     setShowResponseForm(false);
   };
 
+  // Get status badge configuration
+  const getStatusBadge = () => {
+    if (review.status === 'pending') {
+      return (
+        <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-200">
+          <Clock className="h-3 w-3 mr-1" />
+          Pending Approval
+        </Badge>
+      );
+    }
+    if (review.status === 'rejected') {
+      return (
+        <Badge variant="outline" className="text-xs bg-red-100 text-red-800 border-red-200">
+          <X className="h-3 w-3 mr-1" />
+          Not Approved
+        </Badge>
+      );
+    }
+    return null;
+  };
+
   return (
     <div className="space-y-0">
       <Card>
@@ -147,7 +171,7 @@ export const ReviewCard = ({ review }: ReviewCardProps) => {
                 <div className="flex items-start gap-2">
                   <div className="flex-1">
                     <h4 className="font-semibold">{review.title}</h4>
-                    <div className="flex items-center gap-2 mt-1">
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
                       <span className="text-sm text-muted-foreground">by {authorName}</span>
                       <span className="text-sm text-muted-foreground">•</span>
                       <span className="text-sm text-muted-foreground">{createdDate}</span>
@@ -156,6 +180,7 @@ export const ReviewCard = ({ review }: ReviewCardProps) => {
                           Verified Attendee
                         </Badge>
                       )}
+                      {getStatusBadge()}
                       <SentimentIndicator 
                         sentiment={review.sentiment as 'positive' | 'negative' | 'neutral' | null}
                         confidence={review.sentiment_confidence}
@@ -208,7 +233,8 @@ export const ReviewCard = ({ review }: ReviewCardProps) => {
               </div>
             )}
 
-            {user && (
+            {/* Only show voting and response options for approved reviews or hide for pending/rejected reviews */}
+            {user && review.status === 'approved' && (
               <div className="flex items-center justify-between pt-2 border-t">
                 <div className="flex items-center gap-2">
                   <Button
@@ -248,12 +274,24 @@ export const ReviewCard = ({ review }: ReviewCardProps) => {
                 )}
               </div>
             )}
+
+            {/* Show message for own pending/rejected reviews */}
+            {isOwnReview && review.status !== 'approved' && (
+              <div className="pt-2 border-t">
+                <p className="text-sm text-muted-foreground">
+                  {review.status === 'pending' 
+                    ? 'Your review is pending approval by administrators.'
+                    : 'Your review was not approved for publication.'
+                  }
+                </p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
 
-      {/* Admin Response Form */}
-      {showResponseForm && isAdmin && (
+      {/* Admin Response Form - only for approved reviews */}
+      {showResponseForm && isAdmin && review.status === 'approved' && (
         <ReviewResponseForm
           reviewId={review.id}
           onSuccess={handleResponseSuccess}
@@ -261,8 +299,8 @@ export const ReviewCard = ({ review }: ReviewCardProps) => {
         />
       )}
 
-      {/* Display Admin Responses */}
-      {responses.map((response) => (
+      {/* Display Admin Responses - only for approved reviews */}
+      {review.status === 'approved' && responses.map((response) => (
         <ReviewResponse key={response.id} response={response} />
       ))}
     </div>

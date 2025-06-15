@@ -32,7 +32,7 @@ export const ReviewsList = ({ eventId }: ReviewsListProps) => {
   const { hasReviewed, userReview, isLoading: isCheckingReview } = useUserReview({ eventId });
 
   const { data: reviews = [], isLoading, error } = useQuery({
-    queryKey: ['reviews', eventId, sortBy],
+    queryKey: ['reviews', eventId, sortBy, user?.id],
     queryFn: async () => {
       let query = supabase
         .from('reviews')
@@ -40,8 +40,15 @@ export const ReviewsList = ({ eventId }: ReviewsListProps) => {
           *,
           profiles (*)
         `)
-        .eq('event_id', eventId)
-        .eq('status', 'approved'); // Only show approved reviews
+        .eq('event_id', eventId);
+
+      // If user is logged in, include their own review regardless of status
+      // For other users, only show approved reviews
+      if (user) {
+        query = query.or(`status.eq.approved,user_id.eq.${user.id}`);
+      } else {
+        query = query.eq('status', 'approved');
+      }
 
       // Apply sorting
       switch (sortBy) {
@@ -63,6 +70,24 @@ export const ReviewsList = ({ eventId }: ReviewsListProps) => {
       }
 
       const { data, error } = await query;
+      if (error) throw error;
+      return data as Review[];
+    },
+  });
+
+  // Get only approved reviews for stats calculation
+  const { data: approvedReviews = [] } = useQuery({
+    queryKey: ['approved-reviews', eventId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('reviews')
+        .select(`
+          *,
+          profiles (*)
+        `)
+        .eq('event_id', eventId)
+        .eq('status', 'approved');
+
       if (error) throw error;
       return data as Review[];
     },
@@ -127,8 +152,8 @@ export const ReviewsList = ({ eventId }: ReviewsListProps) => {
 
   return (
     <div className="space-y-6">
-      {/* Review Statistics */}
-      <ReviewStats reviews={reviews} />
+      {/* Review Statistics - use only approved reviews */}
+      <ReviewStats reviews={approvedReviews} />
 
       {/* Write Review Button/Form or Already Reviewed Message */}
       {user && (
@@ -158,7 +183,12 @@ export const ReviewsList = ({ eventId }: ReviewsListProps) => {
                     <span className="font-medium">You have already reviewed this event</span>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Thank you for sharing your feedback!
+                    {userReview?.status === 'pending' 
+                      ? 'Your review is pending approval and will be visible below.'
+                      : userReview?.status === 'rejected'
+                      ? 'Your review was not approved.'
+                      : 'Thank you for sharing your feedback!'
+                    }
                   </p>
                 </div>
               </CardContent>
@@ -180,7 +210,7 @@ export const ReviewsList = ({ eventId }: ReviewsListProps) => {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>
-                Reviews ({reviews.length})
+                Reviews ({approvedReviews.length}{user && hasReviewed && userReview?.status !== 'approved' ? ` + your ${userReview?.status || 'pending'} review` : ''})
               </CardTitle>
               <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
                 <SelectTrigger className="w-32">
