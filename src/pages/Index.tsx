@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -15,6 +16,23 @@ const Index = () => {
   const { isAdmin, loading: roleLoading } = useUserRole();
   const navigate = useNavigate();
   const { userLocation, requestLocation, locationLoading } = useLocation();
+
+  const particles = React.useMemo(() => Array.from({ length: 50 }).map((_, i) => {
+    const size = Math.random() * 3 + 1;
+    const left = Math.random() * 100;
+    const animationDuration = Math.random() * 15 + 15;
+    const animationDelay = Math.random() * 20;
+    return {
+      id: i,
+      style: {
+        width: `${size}px`,
+        height: `${size}px`,
+        left: `${left}%`,
+        animationDuration: `${animationDuration}s`,
+        animationDelay: `${animationDelay}s`,
+      },
+    };
+  }), []);
 
   if (loading || (user && roleLoading)) {
     return (
@@ -34,13 +52,19 @@ const Index = () => {
       <div className="container mx-auto px-4 py-8">
         {/* New Hero Section */}
         <motion.div
-          className="text-center mb-16 py-16 px-8 rounded-2xl bg-gradient-to-br from-purple-600 to-blue-600 dark:from-purple-800 dark:to-blue-800 text-white relative overflow-hidden shadow-2xl"
+          className="text-center mb-16 py-24 px-8 rounded-2xl bg-cover bg-center text-white relative overflow-hidden shadow-2xl"
+          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1605810230434-7631ac76ec81?q=80&w=2070&auto=format&fit=crop')" }}
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.7 }}
         >
-          <div className="absolute inset-0 bg-black/30 z-0"></div>
-          <div className="relative z-10">
+          <div className="absolute inset-0 bg-gradient-to-b from-purple-900/60 via-blue-800/40 to-black/80 z-0"></div>
+          <div className="particles z-10">
+            {particles.map((p) => (
+              <div key={p.id} className="particle" style={p.style}></div>
+            ))}
+          </div>
+          <div className="relative z-20">
             <motion.h1 
               className="text-4xl md:text-6xl font-extrabold mb-4 tracking-tight"
               initial={{ opacity: 0, y: 20 }}
@@ -74,8 +98,8 @@ const Index = () => {
                 transition={{ duration: 0.5, delay: 0.8 }}
                 className="space-y-2"
               >
-                <Button size="lg" onClick={requestLocation} disabled={locationLoading} className="bg-white text-purple-700 hover:bg-white/90 font-semibold shadow-lg transform hover:scale-105 transition-transform duration-200">
-                  <MapPin className="mr-2 h-5 w-5 animate-pulse" />
+                <Button size="lg" onClick={requestLocation} disabled={locationLoading} className="bg-white text-purple-700 hover:bg-white/90 font-semibold shadow-lg transform hover:scale-105 transition-transform duration-200 animate-pulse">
+                  <MapPin className="mr-2 h-5 w-5" />
                   {locationLoading ? 'Finding You...' : 'Find Events Near Me'}
                 </Button>
                 <p className="text-sm text-white/60">or set your location in the header</p>
