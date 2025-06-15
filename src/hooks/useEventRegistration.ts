@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -182,28 +181,22 @@ export const useEventRegistration = (eventId: string) => {
   });
 
   const register = () => {
-    setIsLoading(true);
     registerMutation.mutate();
-    setIsLoading(false);
   };
 
   const purchaseTicket = () => {
-    setIsLoading(true);
     purchaseTicketMutation.mutate();
-    setIsLoading(false);
   };
 
   const unregister = () => {
-    setIsLoading(true);
     unregisterMutation.mutate();
-    setIsLoading(false);
   };
 
   return {
     isRegistered: !!isRegistered,
     hasPaidTicket: !!hasPaidTicket,
     hasTicket: !!hasTicket,
-    isLoading: checkingRegistration || isLoading || registerMutation.isPending || purchaseTicketMutation.isPending || unregisterMutation.isPending,
+    isLoading: checkingRegistration || registerMutation.isPending || purchaseTicketMutation.isPending || unregisterMutation.isPending,
     register,
     purchaseTicket,
     unregister,
