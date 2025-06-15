@@ -14,6 +14,7 @@ export const useUserNotifications = () => {
   const queryClient = useQueryClient();
   const [isMarkingAllAsRead, setIsMarkingAllAsRead] = useState(false);
   const channelRef = useRef<any>(null);
+  const isSubscribedRef = useRef(false);
 
   // Fetch user notifications
   const { data: notifications = [], isLoading, error } = useQuery({
@@ -92,12 +93,13 @@ export const useUserNotifications = () => {
 
   // Set up real-time subscription with proper cleanup
   useEffect(() => {
-    if (!user) return;
+    if (!user || isSubscribedRef.current) return;
 
     // Clean up existing channel if it exists
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current);
       channelRef.current = null;
+      isSubscribedRef.current = false;
     }
 
     // Create a unique channel name to prevent conflicts
@@ -118,7 +120,11 @@ export const useUserNotifications = () => {
           queryClient.invalidateQueries({ queryKey: ['user-notifications'] });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          isSubscribedRef.current = true;
+        }
+      });
 
     channelRef.current = channel;
 
@@ -126,9 +132,10 @@ export const useUserNotifications = () => {
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
+        isSubscribedRef.current = false;
       }
     };
-  }, [user, queryClient]);
+  }, [user?.id, queryClient]);
 
   const markAsRead = (notificationId: string) => {
     markAsReadMutation.mutate(notificationId);

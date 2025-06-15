@@ -14,6 +14,7 @@ export function useAdminNotifications() {
   const { isAdmin } = useUserRole();
   const queryClient = useQueryClient();
   const channelRef = useRef<any>(null);
+  const isSubscribedRef = useRef(false);
 
   // Fetch notifications
   const { data: notifications = [], isLoading } = useQuery({
@@ -72,12 +73,13 @@ export function useAdminNotifications() {
 
   // Real-time subscription for new notifications with proper cleanup
   useEffect(() => {
-    if (!user || !isAdmin) return;
+    if (!user || !isAdmin || isSubscribedRef.current) return;
 
     // Clean up existing channel if it exists
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current);
       channelRef.current = null;
+      isSubscribedRef.current = false;
     }
 
     // Create a unique channel name to prevent conflicts with user notifications
@@ -108,7 +110,11 @@ export function useAdminNotifications() {
           queryClient.invalidateQueries({ queryKey: ['admin-notifications'] });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          isSubscribedRef.current = true;
+        }
+      });
 
     channelRef.current = channel;
 
@@ -116,9 +122,10 @@ export function useAdminNotifications() {
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
+        isSubscribedRef.current = false;
       }
     };
-  }, [user, isAdmin, queryClient]);
+  }, [user?.id, isAdmin, queryClient]);
 
   return {
     notifications,
