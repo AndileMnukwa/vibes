@@ -12,11 +12,12 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Star, Eye, CheckCircle, XCircle, ExternalLink } from 'lucide-react';
+import { Star, Eye, CheckCircle, XCircle, ExternalLink, Brain, MessageSquare } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { ReviewStatusBadge } from './ReviewStatusBadge';
 import { SentimentIndicator } from '@/components/reviews/SentimentIndicator';
 import { formatDistanceToNow } from 'date-fns';
+import { useSentimentAnalysis } from '@/hooks/useSentimentAnalysis';
 import type { Tables } from '@/integrations/supabase/types';
 
 type ReviewWithDetails = Tables<'reviews'> & {
@@ -32,6 +33,7 @@ interface AdminReviewsTableProps {
 
 export const AdminReviewsTable = ({ reviews, onRefresh, onReviewSelect }: AdminReviewsTableProps) => {
   const queryClient = useQueryClient();
+  const sentimentAnalysis = useSentimentAnalysis();
 
   const updateReviewStatus = useMutation({
     mutationFn: async ({ reviewId, status }: { reviewId: string; status: 'approved' | 'rejected' }) => {
@@ -61,6 +63,27 @@ export const AdminReviewsTable = ({ reviews, onRefresh, onReviewSelect }: AdminR
 
   const handleStatusUpdate = (reviewId: string, status: 'approved' | 'rejected') => {
     updateReviewStatus.mutate({ reviewId, status });
+  };
+
+  const handleAIAnalysis = async (review: ReviewWithDetails) => {
+    try {
+      await sentimentAnalysis.mutateAsync({
+        reviewId: review.id,
+        title: review.title,
+        content: review.content,
+      });
+      toast({
+        title: 'AI Analysis Complete',
+        description: 'Sentiment analysis and summary have been generated.',
+      });
+      onRefresh();
+    } catch (error: any) {
+      toast({
+        title: 'AI Analysis Failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleReviewClick = (review: ReviewWithDetails) => {
@@ -162,8 +185,18 @@ export const AdminReviewsTable = ({ reviews, onRefresh, onReviewSelect }: AdminR
                     variant="ghost"
                     size="sm"
                     onClick={() => handleReviewClick(review)}
+                    title="View Details"
                   >
                     <Eye className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleAIAnalysis(review)}
+                    disabled={sentimentAnalysis.isPending}
+                    title="Analyze with AI"
+                  >
+                    <Brain className="h-4 w-4 text-purple-600" />
                   </Button>
                   {review.status === 'pending' && (
                     <>
@@ -172,6 +205,7 @@ export const AdminReviewsTable = ({ reviews, onRefresh, onReviewSelect }: AdminR
                         size="sm"
                         onClick={() => handleStatusUpdate(review.id, 'approved')}
                         disabled={updateReviewStatus.isPending}
+                        title="Approve"
                       >
                         <CheckCircle className="h-4 w-4 text-green-600" />
                       </Button>
@@ -180,6 +214,7 @@ export const AdminReviewsTable = ({ reviews, onRefresh, onReviewSelect }: AdminR
                         size="sm"
                         onClick={() => handleStatusUpdate(review.id, 'rejected')}
                         disabled={updateReviewStatus.isPending}
+                        title="Reject"
                       >
                         <XCircle className="h-4 w-4 text-red-600" />
                       </Button>
@@ -193,4 +228,4 @@ export const AdminReviewsTable = ({ reviews, onRefresh, onReviewSelect }: AdminR
       </Table>
     </div>
   );
-};
+}

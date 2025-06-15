@@ -10,7 +10,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Star, X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { useSentimentAnalysis } from '@/hooks/useSentimentAnalysis';
 
 interface ReviewFormProps {
   eventId: string;
@@ -20,7 +19,6 @@ interface ReviewFormProps {
 export const ReviewForm = ({ eventId, onSuccess }: ReviewFormProps) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const sentimentAnalysis = useSentimentAnalysis();
 
   const [formData, setFormData] = useState({
     title: '',
@@ -57,23 +55,11 @@ export const ReviewForm = ({ eventId, onSuccess }: ReviewFormProps) => {
       if (error) throw error;
       return data;
     },
-    onSuccess: async (reviewData) => {
-      // Trigger sentiment analysis for the new review
-      try {
-        await sentimentAnalysis.mutateAsync({
-          reviewId: reviewData.id,
-          title: formData.title,
-          content: formData.content,
-        });
-      } catch (error) {
-        console.error('Sentiment analysis failed:', error);
-        // Don't fail the review submission if sentiment analysis fails
-      }
-
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reviews', eventId] });
       toast({
         title: 'Review submitted',
-        description: 'Thank you for your feedback! AI analysis is being processed.',
+        description: 'Thank you for your feedback! Your review is pending approval.',
       });
       onSuccess();
     },
@@ -200,12 +186,10 @@ export const ReviewForm = ({ eventId, onSuccess }: ReviewFormProps) => {
 
           <Button 
             type="submit" 
-            disabled={submitReview.isPending || sentimentAnalysis.isPending}
+            disabled={submitReview.isPending}
             className="w-full"
           >
-            {submitReview.isPending ? 'Submitting...' : 
-             sentimentAnalysis.isPending ? 'Processing...' : 
-             'Submit Review'}
+            {submitReview.isPending ? 'Submitting...' : 'Submit Review'}
           </Button>
         </form>
       </CardContent>
