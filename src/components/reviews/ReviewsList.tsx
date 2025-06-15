@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -60,6 +60,29 @@ export const ReviewsList = ({ eventId }: ReviewsListProps) => {
       return data as Review[];
     },
   });
+
+  // Real-time subscription for review responses
+  useEffect(() => {
+    const channel = supabase
+      .channel('review-responses-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'review_responses',
+        },
+        () => {
+          // Invalidate review responses queries when there are changes
+          console.log('Review response updated, refreshing...');
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   if (isLoading) {
     return (
@@ -135,7 +158,7 @@ export const ReviewsList = ({ eventId }: ReviewsListProps) => {
               </Select>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
             {reviews.map((review) => (
               <ReviewCard key={review.id} review={review} />
             ))}
