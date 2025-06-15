@@ -62,7 +62,9 @@ const AdminReviews = () => {
 
       // Apply filters
       if (filters.status !== 'all') {
-        query = query.eq('status', filters.status);
+        // Type assertion to ensure the status is one of the allowed enum values
+        const validStatus = filters.status as 'pending' | 'approved' | 'rejected';
+        query = query.eq('status', validStatus);
       }
 
       if (filters.rating !== 'all') {
