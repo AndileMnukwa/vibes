@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -62,17 +61,6 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				},
-				// Custom coral/navy palette
-				coral: {
-					DEFAULT: '#ff7f71',
-					light: '#ff8e87',
-					dark: '#e56b5e'
-				},
-				navy: {
-					DEFAULT: '#1a254f',
-					light: '#39406a',
-					dark: '#182142'
 				}
 			},
 			borderRadius: {
@@ -96,26 +84,11 @@ export default {
 					to: {
 						height: '0'
 					}
-				},
-				'coral-pulse': {
-					'0%, 100%': {
-						boxShadow: '0 0 0 0 rgba(255, 127, 113, 0.4)'
-					},
-					'50%': {
-						boxShadow: '0 0 0 10px rgba(255, 127, 113, 0)'
-					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out',
-				'coral-pulse': 'coral-pulse 2s infinite'
-			},
-			backgroundImage: {
-				'coral-gradient': 'linear-gradient(135deg, #ff7f71 0%, #ff8e87 100%)',
-				'navy-gradient': 'linear-gradient(135deg, #1a254f 0%, #182142 100%)',
-				'hero-light': 'linear-gradient(135deg, #f9fafb 0%, #f1f5f9 100%)',
-				'hero-dark': 'linear-gradient(135deg, #1a254f 0%, #182142 100%)'
+				'accordion-up': 'accordion-up 0.2s ease-out'
 			}
 		}
 	},

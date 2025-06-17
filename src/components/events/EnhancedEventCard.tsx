@@ -49,22 +49,16 @@ export function EnhancedEventCard({ event, isExternal }: EnhancedEventCardProps)
 
   return (
     <motion.div
-      whileHover={{ y: -8, scale: 1.02 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
-      className="group"
+      whileHover={{ y: -4 }}
+      transition={{ duration: 0.2 }}
     >
-      <Card className="h-full cursor-pointer hover:shadow-2xl transition-all duration-300 overflow-hidden border border-border/50 hover:border-coral/30 bg-card backdrop-blur-sm group-hover:bg-gradient-to-br group-hover:from-card group-hover:to-coral/5">
-        <div className="relative">
-          <EventCardImage
-            imageUrl={event.image_url}
-            title={title}
-            isExternal={isExternal}
-            isAdminCreated={isAdminCreated}
-          />
-          
-          {/* Coral gradient overlay on hover */}
-          <div className="absolute inset-0 bg-gradient-to-t from-coral/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-t-lg" />
-        </div>
+      <Card className="h-full cursor-pointer hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+        <EventCardImage
+          imageUrl={event.image_url}
+          title={title}
+          isExternal={isExternal}
+          isAdminCreated={isAdminCreated}
+        />
         
         <EventCardHeader
           title={title}
@@ -96,9 +90,6 @@ export function EnhancedEventCard({ event, isExternal }: EnhancedEventCardProps)
           onAddToCalendar={handleAddToCalendar}
           onClick={handleClick}
         />
-
-        {/* Subtle coral accent border */}
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-coral-gradient opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </Card>
     </motion.div>
   );

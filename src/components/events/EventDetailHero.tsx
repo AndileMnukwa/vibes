@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, MapPin, Users, Share2, MessageCircle } from 'lucide-react';
@@ -26,65 +25,56 @@ export const EventDetailHero = ({ event }: EventDetailHeroProps) => {
 
   return (
     <div className="space-y-6">
-      {/* Hero Image with coral overlay */}
+      {/* Hero Image */}
       {event.image_url && (
-        <div className="relative h-64 lg:h-80 rounded-lg overflow-hidden group">
+        <div className="relative h-64 lg:h-80 rounded-lg overflow-hidden">
           <img
             src={event.image_url}
             alt={event.title}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-navy-dark/60 via-transparent to-transparent" />
         </div>
       )}
 
-      {/* Event Header with enhanced styling */}
+      {/* Event Header */}
       <div className="space-y-4">
         <div className="flex flex-wrap items-center gap-2">
           {event.categories && (
             <Badge
               variant="secondary"
-              className="border border-coral/30 bg-coral/10 text-coral hover:bg-coral/20 transition-colors"
-              style={{ 
-                backgroundColor: event.categories.color + '15', 
-                color: event.categories.color,
-                borderColor: event.categories.color + '30'
-              }}
+              style={{ backgroundColor: event.categories.color + '20', color: event.categories.color }}
             >
               {event.categories.name}
             </Badge>
           )}
           <div className="flex items-center text-sm text-muted-foreground">
-            <Calendar className="mr-1 h-4 w-4 text-coral" />
+            <Calendar className="mr-1 h-4 w-4" />
             {eventDate.toLocaleDateString()} at {formatTime(eventDate)}
             {event.end_date && ` - ${formatTime(new Date(event.end_date))}`}
           </div>
         </div>
 
-        <h1 className="text-3xl lg:text-4xl font-bold text-foreground">
-          {event.title}
-        </h1>
+        <h1 className="text-3xl lg:text-4xl font-bold">{event.title}</h1>
 
         <div className="flex flex-wrap items-center gap-4 text-muted-foreground">
-          <div className="flex items-center hover-coral-bg p-2 rounded-md transition-colors">
-            <MapPin className="mr-1 h-4 w-4 text-coral" />
+          <div className="flex items-center">
+            <MapPin className="mr-1 h-4 w-4" />
             {event.location}
           </div>
           {event.capacity && (
-            <div className="flex items-center hover-coral-bg p-2 rounded-md transition-colors">
-              <Users className="mr-1 h-4 w-4 text-coral" />
+            <div className="flex items-center">
+              <Users className="mr-1 h-4 w-4" />
               Up to {event.capacity} people
             </div>
           )}
         </div>
 
-        {/* Enhanced Share Buttons */}
+        {/* Share Buttons */}
         <div className="flex gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={() => handleWhatsAppShare(event)}
-            className="border-coral/30 text-coral hover:bg-coral hover:text-white transition-colors"
           >
             <MessageCircle className="mr-2 h-4 w-4" />
             Share on WhatsApp
@@ -93,7 +83,6 @@ export const EventDetailHero = ({ event }: EventDetailHeroProps) => {
             variant="outline"
             size="sm"
             onClick={() => handleGeneralShare(event)}
-            className="border-coral/30 text-coral hover:bg-coral hover:text-white transition-colors"
           >
             <Share2 className="mr-2 h-4 w-4" />
             Share

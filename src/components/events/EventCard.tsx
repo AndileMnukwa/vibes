@@ -46,19 +46,14 @@ const EventCard = ({ event }: EventCardProps) => {
   };
 
   return (
-    <Card className="hover:shadow-2xl transition-all duration-300 cursor-pointer border border-border/50 hover:border-coral/30 bg-card hover:bg-gradient-to-br hover:from-card hover:to-coral/5 group" onClick={handleViewDetails}>
-      <CardHeader className="pb-3">
+    <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={handleViewDetails}>
+      <CardHeader>
         <div className="flex justify-between items-start">
-          <CardTitle className="text-lg line-clamp-2 group-hover:text-coral transition-colors">{event.title}</CardTitle>
+          <CardTitle className="text-lg line-clamp-2">{event.title}</CardTitle>
           {event.categories && (
             <Badge 
               variant="secondary" 
-              className="ml-2 border border-coral/30 bg-coral/10 text-coral"
-              style={{ 
-                backgroundColor: event.categories.color + '15', 
-                color: event.categories.color,
-                borderColor: event.categories.color + '30'
-              }}
+              style={{ backgroundColor: event.categories.color + '20', color: event.categories.color }}
             >
               {event.categories.name}
             </Badge>
@@ -69,40 +64,40 @@ const EventCard = ({ event }: EventCardProps) => {
         </p>
       </CardHeader>
       
-      <CardContent className="space-y-3 py-3">
-        <div className="flex items-center text-sm text-muted-foreground hover-coral-bg p-2 rounded-md transition-colors">
-          <Calendar className="h-4 w-4 mr-2 text-coral" />
+      <CardContent className="space-y-2">
+        <div className="flex items-center text-sm text-muted-foreground">
+          <Calendar className="h-4 w-4 mr-2" />
           {eventDate.toLocaleDateString()} at {eventDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </div>
         
-        <div className="flex items-center text-sm text-muted-foreground hover-coral-bg p-2 rounded-md transition-colors">
-          <MapPin className="h-4 w-4 mr-2 text-coral" />
+        <div className="flex items-center text-sm text-muted-foreground">
+          <MapPin className="h-4 w-4 mr-2" />
           {event.location}
         </div>
         
         {event.capacity && (
-          <div className="flex items-center text-sm text-muted-foreground hover-coral-bg p-2 rounded-md transition-colors">
-            <Users className="h-4 w-4 mr-2 text-coral" />
+          <div className="flex items-center text-sm text-muted-foreground">
+            <Users className="h-4 w-4 mr-2" />
             Capacity: {event.capacity}
           </div>
         )}
         
         {event.ticket_price !== null && event.ticket_price > 0 && (
-          <div className="text-lg font-semibold text-coral">
+          <div className="text-lg font-semibold text-green-600">
             ${event.ticket_price}
           </div>
         )}
 
         {event.ticket_price === 0 && (
-          <div className="text-lg font-semibold text-coral">
+          <div className="text-lg font-semibold text-green-600">
             Free
           </div>
         )}
       </CardContent>
       
-      <CardFooter className="flex justify-between pt-3">
+      <CardFooter className="flex justify-between">
         <div className="flex items-center">
-          <Star className="h-4 w-4 text-coral mr-1" />
+          <Star className="h-4 w-4 text-yellow-400 mr-1" />
           {reviews.length > 0 ? (
             <span className="text-sm text-muted-foreground">
               {averageRating.toFixed(1)} ({reviews.length} review{reviews.length !== 1 ? 's' : ''})
@@ -117,14 +112,10 @@ const EventCard = ({ event }: EventCardProps) => {
             e.stopPropagation();
             handleViewDetails();
           }}
-          className="bg-coral hover:bg-coral-dark transition-colors"
         >
           View Details
         </Button>
       </CardFooter>
-      
-      {/* Coral accent bottom border */}
-      <div className="h-1 bg-coral-gradient opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
     </Card>
   );
 };

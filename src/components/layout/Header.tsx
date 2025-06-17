@@ -24,13 +24,13 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-card border-b border-border sticky top-0 z-50 backdrop-blur-sm">
+    <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <Link to="/" className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-coral-gradient rounded-lg flex items-center justify-center shadow-sm">
+          <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
             <span className="text-white font-bold text-lg">V</span>
           </div>
-          <span className="text-xl font-bold text-gradient">
+          <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
             VibeCatcher
           </span>
         </Link>
@@ -38,14 +38,14 @@ const Header = () => {
         <nav className="hidden md:flex items-center space-x-6">
           <Link 
             to="/" 
-            className="flex items-center space-x-1 text-muted-foreground hover:text-coral transition-colors hover-coral"
+            className="flex items-center space-x-1 text-gray-600 hover:text-purple-600 transition-colors"
           >
             <Home className="h-4 w-4" />
             <span>Home</span>
           </Link>
           <Link 
             to="/calendar" 
-            className="flex items-center space-x-1 text-muted-foreground hover:text-coral transition-colors hover-coral"
+            className="flex items-center space-x-1 text-gray-600 hover:text-purple-600 transition-colors"
           >
             <Calendar className="h-4 w-4" />
             <span>Calendar</span>
@@ -60,36 +60,36 @@ const Header = () => {
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full hover:bg-coral/10">
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={user.user_metadata?.avatar_url} />
-                    <AvatarFallback className="bg-coral/10 text-coral">
+                    <AvatarFallback>
                       {user.email?.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end">
-                <DropdownMenuItem onClick={() => navigate('/profile')} className="hover:bg-coral/10 hover:text-coral">
+                <DropdownMenuItem onClick={() => navigate('/profile')}>
                   <User className="mr-2 h-4 w-4" />
                   Profile
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/notifications')} className="hover:bg-coral/10 hover:text-coral">
+                <DropdownMenuItem onClick={() => navigate('/notifications')}>
                   <Bell className="mr-2 h-4 w-4" />
                   Notifications
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/calendar')} className="hover:bg-coral/10 hover:text-coral">
+                <DropdownMenuItem onClick={() => navigate('/calendar')}>
                   <Calendar className="mr-2 h-4 w-4" />
                   Calendar
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleSignOut} className="hover:bg-destructive/10 hover:text-destructive">
+                <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut className="mr-2 h-4 w-4" />
                   Sign out
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button onClick={() => navigate('/auth')} className="bg-coral hover:bg-coral-dark">
+            <Button onClick={() => navigate('/auth')}>
               Sign In
             </Button>
           )}

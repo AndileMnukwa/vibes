@@ -47,12 +47,12 @@ export const ChatBot = () => {
 
   return (
     <>
-      {/* Chat Toggle Button - Fixed z-index and positioning */}
-      <div className="fixed bottom-6 right-6 z-[60]">
+      {/* Chat Toggle Button */}
+      <div className="fixed bottom-6 right-6 z-50">
         <Button
           onClick={toggleChat}
           size="lg"
-          className="rounded-full h-14 w-14 shadow-lg hover:shadow-xl transition-all duration-200 bg-coral hover:bg-coral-dark animate-coral-pulse"
+          className="rounded-full h-14 w-14 shadow-lg hover:shadow-xl transition-all duration-200 bg-purple-600 hover:bg-purple-700"
         >
           {isChatOpen ? (
             <X className="h-6 w-6" />
@@ -62,11 +62,11 @@ export const ChatBot = () => {
         </Button>
       </div>
 
-      {/* Chat Window - Enhanced z-index and better positioning */}
+      {/* Chat Window */}
       {isChatOpen && (
-        <div className="fixed bottom-24 right-6 z-[55] w-96 max-w-[calc(100vw-3rem)] md:max-w-96">
-          <Card className="shadow-2xl border-0 overflow-hidden bg-card backdrop-blur-sm">
-            <CardHeader className="bg-coral-gradient text-white p-4">
+        <div className="fixed bottom-24 right-6 z-40 w-96 max-w-[calc(100vw-3rem)]">
+          <Card className="shadow-2xl border-0 overflow-hidden">
+            <CardHeader className="bg-purple-600 text-white p-4">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg font-semibold">
                   VibeCatcher Support
@@ -76,7 +76,7 @@ export const ChatBot = () => {
                     variant="ghost"
                     size="sm"
                     onClick={clearChat}
-                    className="text-white hover:bg-white/20 h-8 w-8 p-0 transition-colors"
+                    className="text-white hover:bg-purple-700 h-8 w-8 p-0"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -84,13 +84,13 @@ export const ChatBot = () => {
                     variant="ghost"
                     size="sm"
                     onClick={toggleChat}
-                    className="text-white hover:bg-white/20 h-8 w-8 p-0 transition-colors"
+                    className="text-white hover:bg-purple-700 h-8 w-8 p-0"
                   >
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
-              <p className="text-sm text-white/90">
+              <p className="text-sm text-purple-100">
                 Get instant help with events, tickets, and more
               </p>
             </CardHeader>
@@ -106,12 +106,12 @@ export const ChatBot = () => {
                         !message.isBot && "flex-row-reverse"
                       )}
                     >
-                      <Avatar className="h-8 w-8 mt-1 flex-shrink-0">
+                      <Avatar className="h-8 w-8 mt-1">
                         <AvatarFallback className={cn(
-                          "text-xs font-medium",
+                          "text-xs",
                           message.isBot 
-                            ? "bg-coral/10 text-coral border border-coral/20" 
-                            : "bg-navy/10 text-navy border border-navy/20"
+                            ? "bg-purple-100 text-purple-600" 
+                            : "bg-blue-100 text-blue-600"
                         )}>
                           {message.isBot ? 'AI' : 'You'}
                         </AvatarFallback>
@@ -124,12 +124,12 @@ export const ChatBot = () => {
                         <div className={cn(
                           "rounded-lg px-3 py-2 text-sm",
                           message.isBot
-                            ? "bg-muted text-foreground border border-border/50"
-                            : "bg-coral-gradient text-white shadow-sm"
+                            ? "bg-gray-100 text-gray-800"
+                            : "bg-purple-600 text-white"
                         )}>
                           {message.content}
                         </div>
-                        <p className="text-xs text-muted-foreground mt-1">
+                        <p className="text-xs text-gray-400 mt-1">
                           {formatTime(message.timestamp)}
                         </p>
                       </div>
@@ -139,15 +139,15 @@ export const ChatBot = () => {
                   {isLoading && (
                     <div className="flex gap-3">
                       <Avatar className="h-8 w-8 mt-1">
-                        <AvatarFallback className="bg-coral/10 text-coral border border-coral/20 text-xs">
+                        <AvatarFallback className="bg-purple-100 text-purple-600 text-xs">
                           AI
                         </AvatarFallback>
                       </Avatar>
-                      <div className="bg-muted rounded-lg px-3 py-2 border border-border/50">
+                      <div className="bg-gray-100 rounded-lg px-3 py-2">
                         <div className="flex space-x-1">
-                          <div className="w-2 h-2 bg-coral rounded-full animate-bounce"></div>
-                          <div className="w-2 h-2 bg-coral rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                          <div className="w-2 h-2 bg-coral rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                         </div>
                       </div>
                     </div>
@@ -156,7 +156,7 @@ export const ChatBot = () => {
                 <div ref={messagesEndRef} />
               </ScrollArea>
               
-              <div className="border-t border-border p-4">
+              <div className="border-t p-4">
                 <form onSubmit={handleSubmit} className="flex gap-2">
                   <Input
                     ref={inputRef}
@@ -164,18 +164,18 @@ export const ChatBot = () => {
                     onChange={(e) => setInputValue(e.target.value)}
                     placeholder="Type your message..."
                     disabled={isLoading}
-                    className="flex-1 focus:ring-coral focus:border-coral"
+                    className="flex-1"
                   />
                   <Button 
                     type="submit" 
                     size="sm" 
                     disabled={isLoading || !inputValue.trim()}
-                    className="bg-coral hover:bg-coral-dark transition-colors"
+                    className="bg-purple-600 hover:bg-purple-700"
                   >
                     <Send className="h-4 w-4" />
                   </Button>
                 </form>
-                <p className="text-xs text-muted-foreground mt-2 text-center">
+                <p className="text-xs text-gray-500 mt-2 text-center">
                   Powered by AI • For complex issues, contact human support
                 </p>
               </div>
