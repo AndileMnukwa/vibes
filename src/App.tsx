@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -24,6 +23,7 @@ import AdminUsers from '@/pages/admin/AdminUsers';
 import AdminNotifications from '@/pages/admin/AdminNotifications';
 import NotFound from '@/pages/NotFound';
 import UserNotifications from '@/pages/UserNotifications';
+import { ChatBot } from '@/components/support/ChatBot';
 
 const queryClient = new QueryClient();
 
@@ -60,6 +60,7 @@ function App() {
                     
                     <Route path="*" element={<NotFound />} />
                   </Routes>
+                  <ChatBot />
                 </div>
               </EnhancedApp>
             </BrowserRouter>
