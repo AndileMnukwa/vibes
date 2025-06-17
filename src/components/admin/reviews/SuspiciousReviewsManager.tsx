@@ -47,19 +47,26 @@ export const SuspiciousReviewsManager = () => {
     },
   });
 
-  // Fetch notifications about suspicious reviews
+  // Fetch notifications about suspicious reviews - using 'system' type with alert_type filter
   const { data: suspiciousNotifications = [] } = useQuery({
     queryKey: ['suspicious-notifications'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
-        .eq('type', 'suspicious_review')
+        .eq('type', 'system')
         .eq('read', false)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data;
+      
+      // Filter for suspicious review alerts
+      return data.filter(notification => 
+        notification.data && 
+        typeof notification.data === 'object' && 
+        'alert_type' in notification.data && 
+        notification.data.alert_type === 'suspicious_review'
+      );
     },
   });
 

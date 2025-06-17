@@ -240,20 +240,21 @@ export class FakeReviewDetectionService {
         return;
       }
 
-      // Create a notification for admins about the suspicious review
+      // Create a notification for admins about the suspicious review using the 'system' type
       const { data: adminIds } = await supabase.rpc('get_admin_user_ids');
       
       if (adminIds && adminIds.length > 0) {
         const notifications = adminIds.map((adminId: string) => ({
           user_id: adminId,
-          type: 'suspicious_review' as const,
+          type: 'system' as const,
           title: 'Suspicious Review Detected',
           message: `A review has been flagged as potentially fake. Flags: ${detectionResult.flags.join(', ')}`,
           data: {
             review_id: reviewId,
             suspicion_score: detectionResult.suspicionScore,
             flags: detectionResult.flags,
-            confidence: detectionResult.confidence
+            confidence: detectionResult.confidence,
+            alert_type: 'suspicious_review'
           }
         }));
 

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -149,7 +150,10 @@ export const ReviewForm = ({ eventId, onSuccess }: ReviewFormProps) => {
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             Write a Review
-            <Shield className="h-5 w-5 text-green-600" title="Protected by AI fraud detection" />
+            <div className="relative">
+              <Shield className="h-5 w-5 text-green-600" />
+              <span className="sr-only">Protected by AI fraud detection</span>
+            </div>
           </CardTitle>
           <Button
             variant="ghost"
