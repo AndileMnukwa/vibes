@@ -1,14 +1,15 @@
-
 import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useFakeReviewDetection } from '@/hooks/useFakeReviewDetection';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Star, X } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Star, X, AlertTriangle, Shield } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface ReviewFormProps {
@@ -19,6 +20,8 @@ interface ReviewFormProps {
 export const ReviewForm = ({ eventId, onSuccess }: ReviewFormProps) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const [showDetectionAlert, setShowDetectionAlert] = useState(false);
+  const [detectionFlags, setDetectionFlags] = useState<string[]>([]);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -27,6 +30,15 @@ export const ReviewForm = ({ eventId, onSuccess }: ReviewFormProps) => {
     atmosphereRating: 0,
     organizationRating: 0,
     valueRating: 0,
+  });
+
+  const { detectFakeReview, isAnalyzing } = useFakeReviewDetection({
+    onDetectionComplete: (isSuspicious, flags) => {
+      if (isSuspicious) {
+        setDetectionFlags(flags);
+        setShowDetectionAlert(true);
+      }
+    }
   });
 
   const submitReview = useMutation({
@@ -49,17 +61,26 @@ export const ReviewForm = ({ eventId, onSuccess }: ReviewFormProps) => {
           organization_rating: formData.organizationRating || null,
           value_rating: formData.valueRating || null,
         })
-        .select()
+        .select(`
+          *,
+          profiles (*)
+        `)
         .single();
 
       if (error) throw error;
+
+      // Run fake review detection after successful submission
+      if (data) {
+        detectFakeReview(data as any);
+      }
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reviews', eventId] });
       toast({
         title: 'Review submitted',
-        description: 'Thank you for your feedback! Your review is pending approval.',
+        description: 'Thank you for your feedback! Your review is being processed.',
       });
       onSuccess();
     },
@@ -118,6 +139,7 @@ export const ReviewForm = ({ eventId, onSuccess }: ReviewFormProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setShowDetectionAlert(false);
     submitReview.mutate();
   };
 
@@ -125,7 +147,10 @@ export const ReviewForm = ({ eventId, onSuccess }: ReviewFormProps) => {
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>Write a Review</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            Write a Review
+            <Shield className="h-5 w-5 text-green-600" title="Protected by AI fraud detection" />
+          </CardTitle>
           <Button
             variant="ghost"
             size="sm"
@@ -136,6 +161,23 @@ export const ReviewForm = ({ eventId, onSuccess }: ReviewFormProps) => {
         </div>
       </CardHeader>
       <CardContent>
+        {showDetectionAlert && (
+          <Alert className="mb-6 border-orange-200 bg-orange-50">
+            <AlertTriangle className="h-4 w-4 text-orange-600" />
+            <AlertDescription className="text-orange-800">
+              <strong>Review Quality Notice:</strong> Our AI detected some patterns that may affect review quality:
+              <ul className="mt-2 list-disc list-inside space-y-1">
+                {detectionFlags.map((flag, index) => (
+                  <li key={index} className="text-sm">{flag}</li>
+                ))}
+              </ul>
+              <p className="mt-2 text-sm">
+                Your review has been submitted for additional review. Authentic, detailed reviews help other users make better decisions.
+              </p>
+            </AlertDescription>
+          </Alert>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="title">Review Title *</Label>
@@ -158,6 +200,9 @@ export const ReviewForm = ({ eventId, onSuccess }: ReviewFormProps) => {
               rows={4}
               required
             />
+            <p className="text-xs text-muted-foreground">
+              Please provide specific details about your experience to help other users.
+            </p>
           </div>
 
           <StarRating
@@ -186,10 +231,10 @@ export const ReviewForm = ({ eventId, onSuccess }: ReviewFormProps) => {
 
           <Button 
             type="submit" 
-            disabled={submitReview.isPending}
+            disabled={submitReview.isPending || isAnalyzing}
             className="w-full"
           >
-            {submitReview.isPending ? 'Submitting...' : 'Submit Review'}
+            {submitReview.isPending ? 'Submitting...' : isAnalyzing ? 'Processing...' : 'Submit Review'}
           </Button>
         </form>
       </CardContent>

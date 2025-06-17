@@ -3,10 +3,12 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AdminReviewsHeader } from '@/components/admin/reviews/AdminReviewsHeader';
 import { ReviewStatsCards } from '@/components/admin/reviews/ReviewStatsCards';
 import { ReviewManagementSection } from '@/components/admin/reviews/ReviewManagementSection';
 import { ReviewDetailsModal } from '@/components/admin/reviews/ReviewDetailsModal';
+import { SuspiciousReviewsManager } from '@/components/admin/reviews/SuspiciousReviewsManager';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useReviewStats } from '@/hooks/useReviewStats';
 import { useReviewModal } from '@/hooks/useReviewModal';
@@ -31,6 +33,7 @@ export interface ReviewSort {
 }
 
 const AdminReviews = () => {
+  const [activeTab, setActiveTab] = useState('overview');
   const [filters, setFilters] = useState<ReviewFilters>({
     status: 'all',
     rating: 'all',
@@ -130,16 +133,44 @@ const AdminReviews = () => {
   return (
     <div className="space-y-6">
       <AdminReviewsHeader />
-      <ReviewStatsCards stats={stats} />
-      <ReviewManagementSection
-        reviews={reviews}
-        filters={filters}
-        onFiltersChange={setFilters}
-        sort={sort}
-        onSortChange={setSort}
-        onRefresh={refetch}
-        onReviewSelect={setSelectedReview}
-      />
+
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="overview">Review Overview</TabsTrigger>
+          <TabsTrigger value="management">Review Management</TabsTrigger>
+          <TabsTrigger value="fraud-detection">AI Fraud Detection</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-6">
+          <ReviewStatsCards stats={stats} />
+          <ReviewManagementSection
+            reviews={reviews}
+            filters={filters}
+            onFiltersChange={setFilters}
+            sort={sort}
+            onSortChange={setSort}
+            onRefresh={refetch}
+            onReviewSelect={setSelectedReview}
+          />
+        </TabsContent>
+
+        <TabsContent value="management" className="space-y-6">
+          <ReviewStatsCards stats={stats} />
+          <ReviewManagementSection
+            reviews={reviews}
+            filters={filters}
+            onFiltersChange={setFilters}
+            sort={sort}
+            onSortChange={setSort}
+            onRefresh={refetch}
+            onReviewSelect={setSelectedReview}
+          />
+        </TabsContent>
+
+        <TabsContent value="fraud-detection">
+          <SuspiciousReviewsManager />
+        </TabsContent>
+      </Tabs>
 
       {selectedReview && (
         <ReviewDetailsModal
