@@ -1,94 +1,91 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. */
+/* Enhanced color scheme with coral/navy palette */
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 222.2 84% 4.9%;
+    /* Light mode - Coral/Navy theme */
+    --background: 249 250 251;  /* #f9fafb */
+    --foreground: 24 33 66;     /* #182142 */
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 255 255 255;        /* #ffffff */
+    --card-foreground: 24 33 66; /* #182142 */
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 255 255 255;     /* #ffffff */
+    --popover-foreground: 24 33 66; /* #182142 */
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 255 127 113;     /* #ff7f71 - Coral */
+    --primary-foreground: 255 255 255; /* #ffffff */
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 241 245 249;   /* #f1f5f9 */
+    --secondary-foreground: 24 33 66; /* #182142 */
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 241 245 249;       /* #f1f5f9 */
+    --muted-foreground: 100 116 139; /* #64748b */
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 255 142 135;      /* #ff8e87 - Light Coral */
+    --accent-foreground: 24 33 66; /* #182142 */
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 239 68 68;   /* #ef4444 */
+    --destructive-foreground: 255 255 255; /* #ffffff */
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 203 213 225;      /* #cbd5e1 */
+    --input: 203 213 225;       /* #cbd5e1 */
+    --ring: 255 127 113;        /* #ff7f71 - Coral */
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 249 250 251; /* #f9fafb */
+    --sidebar-foreground: 100 116 139; /* #64748b */
+    --sidebar-primary: 255 127 113;    /* #ff7f71 */
+    --sidebar-primary-foreground: 255 255 255; /* #ffffff */
+    --sidebar-accent: 241 245 249;     /* #f1f5f9 */
+    --sidebar-accent-foreground: 24 33 66; /* #182142 */
+    --sidebar-border: 203 213 225;     /* #cbd5e1 */
+    --sidebar-ring: 255 127 113;       /* #ff7f71 */
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    /* Dark mode - Navy theme with coral accents */
+    --background: 24 33 66;     /* #182142 - Dark Navy */
+    --foreground: 255 255 255;  /* #ffffff */
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 26 37 79;           /* #1a254f - Navy */
+    --card-foreground: 255 255 255; /* #ffffff */
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 26 37 79;        /* #1a254f */
+    --popover-foreground: 255 255 255; /* #ffffff */
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 255 127 113;     /* #ff7f71 - Coral (consistent) */
+    --primary-foreground: 255 255 255; /* #ffffff */
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 57 64 106;     /* #39406a - Light Navy */
+    --secondary-foreground: 255 255 255; /* #ffffff */
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 57 64 106;         /* #39406a */
+    --muted-foreground: 203 213 225; /* #cbd5e1 */
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 57 64 106;        /* #39406a */
+    --accent-foreground: 255 255 255; /* #ffffff */
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 239 68 68;   /* #ef4444 */
+    --destructive-foreground: 255 255 255; /* #ffffff */
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --border: 57 64 106;        /* #39406a */
+    --input: 57 64 106;         /* #39406a */
+    --ring: 255 127 113;        /* #ff7f71 */
+
+    --sidebar-background: 24 33 66;    /* #182142 */
+    --sidebar-foreground: 203 213 225; /* #cbd5e1 */
+    --sidebar-primary: 255 127 113;    /* #ff7f71 */
+    --sidebar-primary-foreground: 255 255 255; /* #ffffff */
+    --sidebar-accent: 57 64 106;       /* #39406a */
+    --sidebar-accent-foreground: 255 255 255; /* #ffffff */
+    --sidebar-border: 57 64 106;       /* #39406a */
+    --sidebar-ring: 255 127 113;       /* #ff7f71 */
   }
 }
 
@@ -101,7 +98,7 @@
     @apply bg-background text-foreground font-sans antialiased;
   }
 
-  /* Custom scrollbar */
+  /* Custom scrollbar with coral theme */
   ::-webkit-scrollbar {
     width: 6px;
   }
@@ -111,24 +108,24 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-muted-foreground/30 rounded-full;
+    @apply bg-primary/30 rounded-full;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-muted-foreground/50;
+    @apply bg-primary/50;
   }
 
-  /* Glass morphism utility */
+  /* Enhanced glass morphism with coral tints */
   .glass {
     @apply bg-background/80 backdrop-blur-md border border-border/50;
   }
 
-  /* Text gradient utility */
+  /* Coral gradient utility */
   .text-gradient {
-    @apply bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
   }
 
-  /* Smooth animations */
+  /* Enhanced animations */
   .animate-float {
     animation: float 3s ease-in-out infinite;
   }
@@ -160,7 +157,7 @@
     -webkit-line-clamp: 3;
   }
 
-  /* New Particle Animations */
+  /* Enhanced particle animations with coral theme */
   .particles {
     position: absolute;
     top: 0;
@@ -173,7 +170,7 @@
 
   .particle {
     position: absolute;
-    background-color: rgba(255, 255, 255, 0.15);
+    background: linear-gradient(45deg, rgb(255 127 113 / 0.15), rgb(255 142 135 / 0.1));
     border-radius: 50%;
     animation: particle-flow 20s linear infinite;
     opacity: 0;
@@ -189,5 +186,14 @@
       transform: translateY(-100vh) scale(1);
       opacity: 0;
     }
+  }
+
+  /* Coral hover effects */
+  .hover-coral {
+    @apply transition-colors duration-200 hover:text-primary hover:border-primary;
+  }
+
+  .hover-coral-bg {
+    @apply transition-colors duration-200 hover:bg-primary/10;
   }
 }

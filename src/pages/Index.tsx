@@ -39,7 +39,7 @@ const Index = () => {
       <Layout>
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-coral mx-auto"></div>
             <p className="mt-4 text-lg text-muted-foreground">Loading your personalized experience...</p>
           </div>
         </div>
@@ -50,7 +50,7 @@ const Index = () => {
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
-        {/* New Hero Section */}
+        {/* Enhanced Hero Section with coral/navy theme */}
         <motion.div
           className="text-center mb-16 py-24 px-8 rounded-2xl bg-cover bg-center text-white relative overflow-hidden shadow-2xl"
           style={{ backgroundImage: "url('https://images.unsplash.com/photo-1605810230434-7631ac76ec81?q=80&w=2070&auto=format&fit=crop')" }}
@@ -58,7 +58,7 @@ const Index = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
         >
-          <div className="absolute inset-0 bg-gradient-to-b from-purple-900/60 via-blue-800/40 to-black/80 z-0"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-navy/80 via-navy-dark/60 to-navy-dark/90 z-0"></div>
           <div className="particles z-10">
             {particles.map((p) => (
               <div key={p.id} className="particle" style={p.style}></div>
@@ -74,7 +74,7 @@ const Index = () => {
               Discover Your Next Experience
             </motion.h1>
             <motion.p 
-              className="text-lg md:text-xl text-white/80 mb-8 max-w-3xl mx-auto"
+              className="text-lg md:text-xl text-white/90 mb-8 max-w-3xl mx-auto"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.4 }}
@@ -98,11 +98,16 @@ const Index = () => {
                 transition={{ duration: 0.5, delay: 0.8 }}
                 className="space-y-2"
               >
-                <Button size="lg" onClick={requestLocation} disabled={locationLoading} className="bg-white text-purple-700 hover:bg-white/90 font-semibold shadow-lg transform hover:scale-105 transition-transform duration-200 animate-pulse">
+                <Button 
+                  size="lg" 
+                  onClick={requestLocation} 
+                  disabled={locationLoading} 
+                  className="bg-coral hover:bg-coral-dark font-semibold shadow-lg transform hover:scale-105 transition-all duration-200 animate-coral-pulse border-0"
+                >
                   <MapPin className="mr-2 h-5 w-5" />
                   {locationLoading ? 'Finding You...' : 'Find Events Near Me'}
                 </Button>
-                <p className="text-sm text-white/60">or set your location in the header</p>
+                <p className="text-sm text-white/70">or set your location in the header</p>
               </motion.div>
             )}
             
@@ -111,7 +116,7 @@ const Index = () => {
                 <Button 
                   size="sm" 
                   variant="secondary"
-                  className="bg-white/20 hover:bg-white/30 backdrop-blur-sm"
+                  className="bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 text-white hover:text-coral transition-colors"
                   onClick={() => navigate('/admin/create-event')}
                 >
                   <Plus className="mr-2 h-4 w-4" />
@@ -122,8 +127,8 @@ const Index = () => {
           </div>
         </motion.div>
 
-        {/* Events Section */}
-        <section id="events-section">
+        {/* Events Section with enhanced styling */}
+        <section id="events-section" className="bg-gradient-to-br from-background to-muted/30 rounded-2xl p-8">
           <EnhancedEventsGrid />
         </section>
 
