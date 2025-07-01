@@ -48,7 +48,7 @@ export const ChatBot = () => {
   return (
     <>
       {/* Chat Toggle Button */}
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed bottom-6 right-6 z-[60]">
         <Button
           onClick={toggleChat}
           size="lg"
@@ -64,9 +64,9 @@ export const ChatBot = () => {
 
       {/* Chat Window */}
       {isChatOpen && (
-        <div className="fixed bottom-24 right-6 z-40 w-96 max-w-[calc(100vw-3rem)]">
-          <Card className="shadow-2xl border-0 overflow-hidden">
-            <CardHeader className="bg-purple-600 text-white p-4">
+        <div className="fixed bottom-24 right-6 z-[60] w-96 max-w-[calc(100vw-3rem)] md:max-w-96">
+          <Card className="shadow-2xl border-0 overflow-hidden max-h-[calc(100vh-10rem)] flex flex-col">
+            <CardHeader className="bg-purple-600 text-white p-4 flex-shrink-0">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg font-semibold">
                   VibeCatcher Support
@@ -95,8 +95,8 @@ export const ChatBot = () => {
               </p>
             </CardHeader>
             
-            <CardContent className="p-0">
-              <ScrollArea className="h-96 p-4">
+            <CardContent className="p-0 flex flex-col flex-1 min-h-0">
+              <ScrollArea className="flex-1 p-4 max-h-[calc(100vh-18rem)] min-h-[300px]">
                 <div className="space-y-4">
                   {messages.map((message) => (
                     <div
@@ -106,7 +106,7 @@ export const ChatBot = () => {
                         !message.isBot && "flex-row-reverse"
                       )}
                     >
-                      <Avatar className="h-8 w-8 mt-1">
+                      <Avatar className="h-8 w-8 mt-1 flex-shrink-0">
                         <AvatarFallback className={cn(
                           "text-xs",
                           message.isBot 
@@ -122,7 +122,7 @@ export const ChatBot = () => {
                         !message.isBot && "text-right"
                       )}>
                         <div className={cn(
-                          "rounded-lg px-3 py-2 text-sm",
+                          "rounded-lg px-3 py-2 text-sm break-words",
                           message.isBot
                             ? "bg-gray-100 text-gray-800"
                             : "bg-purple-600 text-white"
@@ -138,7 +138,7 @@ export const ChatBot = () => {
                   
                   {isLoading && (
                     <div className="flex gap-3">
-                      <Avatar className="h-8 w-8 mt-1">
+                      <Avatar className="h-8 w-8 mt-1 flex-shrink-0">
                         <AvatarFallback className="bg-purple-100 text-purple-600 text-xs">
                           AI
                         </AvatarFallback>
@@ -156,7 +156,7 @@ export const ChatBot = () => {
                 <div ref={messagesEndRef} />
               </ScrollArea>
               
-              <div className="border-t p-4">
+              <div className="border-t p-4 flex-shrink-0">
                 <form onSubmit={handleSubmit} className="flex gap-2">
                   <Input
                     ref={inputRef}
@@ -170,7 +170,7 @@ export const ChatBot = () => {
                     type="submit" 
                     size="sm" 
                     disabled={isLoading || !inputValue.trim()}
-                    className="bg-purple-600 hover:bg-purple-700"
+                    className="bg-purple-600 hover:bg-purple-700 flex-shrink-0"
                   >
                     <Send className="h-4 w-4" />
                   </Button>
