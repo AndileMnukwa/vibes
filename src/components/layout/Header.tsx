@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -10,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { User, LogOut, Settings, Calendar, Home, Bell } from 'lucide-react';
+import { User, LogOut, Settings, Calendar, Home, Bell, TrendingUp } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { UserNotificationBell } from '@/components/notifications/UserNotificationBell';
 
@@ -50,6 +49,15 @@ const Header = () => {
             <Calendar className="h-4 w-4" />
             <span>Calendar</span>
           </Link>
+          {user && (
+            <Link 
+              to="/analytics" 
+              className="flex items-center space-x-1 text-gray-600 hover:text-purple-600 transition-colors"
+            >
+              <TrendingUp className="h-4 w-4" />
+              <span>Analytics</span>
+            </Link>
+          )}
         </nav>
 
         <div className="flex items-center space-x-4">
@@ -73,6 +81,10 @@ const Header = () => {
                 <DropdownMenuItem onClick={() => navigate('/profile')}>
                   <User className="mr-2 h-4 w-4" />
                   Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/analytics')}>
+                  <TrendingUp className="mr-2 h-4 w-4" />
+                  Analytics
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('/notifications')}>
                   <Bell className="mr-2 h-4 w-4" />

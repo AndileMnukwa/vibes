@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -9,6 +10,7 @@ import { EnhancedApp } from '@/components/enhanced/EnhancedApp';
 import Index from '@/pages/Index';
 import Auth from '@/pages/Auth';
 import Calendar from '@/pages/Calendar';
+import Analytics from '@/pages/Analytics';
 import Profile from '@/pages/Profile';
 import EventDetail from '@/pages/EventDetail';
 import PaymentSuccess from '@/pages/PaymentSuccess';
@@ -41,6 +43,7 @@ function App() {
                     <Route path="/" element={<Index />} />
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/calendar" element={<Calendar />} />
+                    <Route path="/analytics" element={<Analytics />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/notifications" element={<UserNotifications />} />
                     <Route path="/my-tickets" element={<MyTickets />} />
