@@ -65,7 +65,7 @@ export const ChatBot = () => {
       {/* Chat Window */}
       {isChatOpen && (
         <div className="fixed bottom-24 right-6 z-[60] w-96 max-w-[calc(100vw-3rem)] md:max-w-96">
-          <Card className="shadow-2xl border-0 overflow-hidden max-h-[calc(100vh-10rem)] flex flex-col">
+          <Card className="shadow-2xl border-0 overflow-hidden max-h-[calc(100vh-12rem)] flex flex-col">
             <CardHeader className="bg-purple-600 text-white p-4 flex-shrink-0">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg font-semibold">
@@ -96,7 +96,7 @@ export const ChatBot = () => {
             </CardHeader>
             
             <CardContent className="p-0 flex flex-col flex-1 min-h-0">
-              <ScrollArea className="flex-1 p-4 max-h-[calc(100vh-18rem)] min-h-[300px]">
+              <ScrollArea className="flex-1 p-4 max-h-[calc(100vh-20rem)] min-h-[300px]">
                 <div className="space-y-4">
                   {messages.map((message) => (
                     <div

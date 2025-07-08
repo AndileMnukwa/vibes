@@ -4,9 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar, Download, TrendingUp } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useUserAnalyticsData } from '@/hooks/useUserAnalyticsData';
+import { toast } from 'sonner';
 
 export const AnalyticsHeader = () => {
   const [dateRange, setDateRange] = useState('30d');
+  const [isExporting, setIsExporting] = useState(false);
+  const { metrics, timelineData, categoryData, reviewData } = useUserAnalyticsData();
 
   const dateRanges = [
     { value: '7d', label: '7 Days' },
@@ -14,6 +18,39 @@ export const AnalyticsHeader = () => {
     { value: '90d', label: '90 Days' },
     { value: '1y', label: '1 Year' },
   ];
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const exportData = {
+        metrics,
+        timelineData,
+        categoryData,
+        reviewData,
+        exportDate: new Date().toISOString(),
+        dateRange
+      };
+
+      const dataStr = JSON.stringify(exportData, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `vibecatcher-analytics-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast.success('Analytics data exported successfully!');
+    } catch (error) {
+      console.error('Export failed:', error);
+      toast.error('Failed to export analytics data');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
     <div className="mb-8">
@@ -45,9 +82,15 @@ export const AnalyticsHeader = () => {
             </div>
           </div>
           
-          <Button variant="outline" size="sm" className="gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="gap-2"
+            onClick={handleExport}
+            disabled={isExporting}
+          >
             <Download className="h-4 w-4" />
-            Export
+            {isExporting ? 'Exporting...' : 'Export'}
           </Button>
         </div>
       </div>

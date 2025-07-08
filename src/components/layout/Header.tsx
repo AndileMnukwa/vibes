@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -10,7 +11,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { User, LogOut, Settings, Calendar, Home, Bell, TrendingUp } from 'lucide-react';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { UserNotificationBell } from '@/components/notifications/UserNotificationBell';
 
 const Header = () => {
@@ -61,8 +61,6 @@ const Header = () => {
         </nav>
 
         <div className="flex items-center space-x-4">
-          <ThemeToggle />
-          
           {user && <UserNotificationBell />}
           
           {user ? (
