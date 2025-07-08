@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -116,9 +115,14 @@ export const useUserAnalyticsData = () => {
         // Process category preferences (based on event views)
         const categoryMap = new Map<string, number>();
         analyticsData?.forEach(event => {
-          if (event.event_type === 'event_view' && event.event_data?.category) {
-            const category = event.event_data.category;
-            categoryMap.set(category, (categoryMap.get(category) || 0) + 1);
+          if (event.event_type === 'event_view' && event.event_data) {
+            // Safely check if event_data is an object and has a category property
+            if (typeof event.event_data === 'object' && event.event_data !== null && 'category' in event.event_data) {
+              const category = (event.event_data as { category?: string }).category;
+              if (category && typeof category === 'string') {
+                categoryMap.set(category, (categoryMap.get(category) || 0) + 1);
+              }
+            }
           }
         });
 
