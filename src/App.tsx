@@ -25,6 +25,7 @@ import AdminUsers from '@/pages/admin/AdminUsers';
 import AdminNotifications from '@/pages/admin/AdminNotifications';
 import NotFound from '@/pages/NotFound';
 import UserNotifications from '@/pages/UserNotifications';
+import ExternalEventDetail from '@/pages/ExternalEventDetail';
 import { ChatBot } from '@/components/support/ChatBot';
 
 const queryClient = new QueryClient();
@@ -48,6 +49,7 @@ function App() {
                     <Route path="/notifications" element={<UserNotifications />} />
                     <Route path="/my-tickets" element={<MyTickets />} />
                     <Route path="/events/:id" element={<EventDetail />} />
+                    <Route path="/external-events/:source/:id" element={<ExternalEventDetail />} />
                     <Route path="/payment-success" element={<PaymentSuccess />} />
                     
                     {/* Admin routes */}

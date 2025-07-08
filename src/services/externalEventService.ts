@@ -45,6 +45,14 @@ export class ExternalEventService {
       // Use provided location or fallback to mock location
       const effectiveLocation = location || this.getMockLocation();
       
+      // TODO: Replace with real Eventbrite API call
+      // const response = await fetch(`${EVENTBRITE_API_URL}/events/search/?location.latitude=${effectiveLocation.latitude}&location.longitude=${effectiveLocation.longitude}&location.within=${radius}km&expand=venue,ticket_availability,organizer&start_date.range_start=${new Date().toISOString()}`, {
+      //   headers: {
+      //     'Authorization': `Bearer ${process.env.EVENTBRITE_API_TOKEN}`,
+      //   }
+      // });
+      
+      // For now, return enhanced mock data with real location integration
       const mockEvents: ExternalEvent[] = [
         {
           id: 'eb-1',
@@ -123,6 +131,14 @@ export class ExternalEventService {
       
       const effectiveLocation = location || this.getMockLocation();
       
+      // TODO: Replace with real Meetup API call
+      // const response = await fetch(`${MEETUP_API_URL}/find/events?lat=${effectiveLocation.latitude}&lon=${effectiveLocation.longitude}&radius=${radius}&page=20`, {
+      //   headers: {
+      //     'Authorization': `Bearer ${process.env.MEETUP_API_TOKEN}`,
+      //   }
+      // });
+      
+      // For now, return enhanced mock data with real location integration
       const mockEvents: ExternalEvent[] = [
         {
           id: 'mu-1',
@@ -172,6 +188,35 @@ export class ExternalEventService {
     } catch (error) {
       console.error('Failed to fetch Meetup events:', error);
       return [];
+    }
+  }
+
+  static async fetchExternalEventDetail(source: string, id: string): Promise<ExternalEvent | null> {
+    try {
+      console.log(`Fetching external event detail for ${source}:${id}`);
+      
+      // For now, we'll simulate fetching from a cached list or API
+      // In a real implementation, this would make a specific API call for the event
+      const mockLocation = this.getMockLocation();
+      let events: ExternalEvent[] = [];
+      
+      switch (source) {
+        case 'eventbrite':
+          events = await this.fetchEventbriteEvents(mockLocation);
+          break;
+        case 'meetup':
+          events = await this.fetchMeetupEvents(mockLocation);
+          break;
+        default:
+          console.warn(`Unsupported event source: ${source}`);
+          return null;
+      }
+      
+      const event = events.find(e => e.id === id);
+      return event || null;
+    } catch (error) {
+      console.error('Failed to fetch external event detail:', error);
+      return null;
     }
   }
 

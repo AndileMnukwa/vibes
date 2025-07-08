@@ -27,7 +27,7 @@ export function EnhancedEventCard({ event, isExternal }: EnhancedEventCardProps)
   const handleClick = () => {
     if (isExternal) {
       const externalEvent = event as ExternalEvent;
-      window.open(externalEvent.external_url, '_blank');
+      navigate(`/external-events/${externalEvent.source}/${externalEvent.id}`);
     } else {
       navigate(`/events/${event.id}`);
     }
