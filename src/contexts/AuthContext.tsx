@@ -38,38 +38,92 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     );
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    // Check for existing session with retry logic
+    const checkSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error('Session check error:', error);
+          // If there's an error getting session, clear it
+          setSession(null);
+          setUser(null);
+        } else {
+          setSession(session);
+          setUser(session?.user ?? null);
+        }
+      } catch (err) {
+        console.error('Unexpected session error:', err);
+        setSession(null);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkSession();
 
     return () => subscription.unsubscribe();
   }, []);
 
   const signUp = async (email: string, password: string, fullName?: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: {
-          full_name: fullName,
+    try {
+      const redirectUrl = `${window.location.origin}/`;
+      
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            full_name: fullName,
+          }
+        }
+      });
+      
+      if (error) {
+        console.error('Sign up error:', error);
+        // Handle specific error types
+        if (error.message.includes('Failed to fetch')) {
+          return { error: { message: 'Network connection error. Please check your internet connection and try again.' } };
+        }
+        if (error.message.includes('User already registered')) {
+          return { error: { message: 'An account with this email already exists. Please sign in instead.' } };
         }
       }
-    });
-    return { error };
+      
+      return { error };
+    } catch (err) {
+      console.error('Unexpected sign up error:', err);
+      return { error: { message: 'An unexpected error occurred. Please try again.' } };
+    }
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return { error };
+    try {
+      // Clear any existing sessions first to avoid conflicts
+      await supabase.auth.signOut();
+      
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) {
+        console.error('Sign in error:', error);
+        // Handle specific error types
+        if (error.message.includes('Failed to fetch')) {
+          return { error: { message: 'Network connection error. Please check your internet connection and try again.' } };
+        }
+        if (error.message.includes('Invalid login credentials')) {
+          return { error: { message: 'Invalid email or password. Please check your credentials and try again.' } };
+        }
+      }
+      
+      return { error };
+    } catch (err) {
+      console.error('Unexpected sign in error:', err);
+      return { error: { message: 'An unexpected error occurred. Please try again.' } };
+    }
   };
 
   const signOut = async () => {
