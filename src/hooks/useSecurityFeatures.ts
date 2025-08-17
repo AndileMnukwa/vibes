@@ -175,23 +175,30 @@ export const useSecurityFeatures = () => {
         }
       };
 
-      // Monitor for console manipulation attempts
-      const originalConsole = { ...console };
+      // Skip console manipulation monitoring in development
+      // This was creating false positives with dev tools
+      const shouldMonitorConsole = process.env.NODE_ENV === 'production';
       
       const monitorConsole = () => {
-        if (console !== originalConsole) {
-          logSecurityEvent('console_manipulation', {
-            timestamp: Date.now()
-          }, 'high');
+        // Only monitor in production to avoid dev tools false positives
+        if (shouldMonitorConsole && typeof window !== 'undefined') {
+          // More sophisticated console manipulation detection
+          const hasDevTools = window.outerHeight - window.innerHeight > 160;
+          if (hasDevTools && !window.localStorage.getItem('dev_tools_acknowledged')) {
+            logSecurityEvent('potential_console_access', {
+              timestamp: Date.now(),
+              window_diff: window.outerHeight - window.innerHeight
+            }, 'low');
+          }
         }
       };
 
       document.addEventListener('click', handleClick);
-      const consoleInterval = setInterval(monitorConsole, 5000);
+      const consoleInterval = shouldMonitorConsole ? setInterval(monitorConsole, 30000) : null;
 
       return () => {
         document.removeEventListener('click', handleClick);
-        clearInterval(consoleInterval);
+        if (consoleInterval) clearInterval(consoleInterval);
       };
     };
 

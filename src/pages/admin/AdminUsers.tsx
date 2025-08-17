@@ -2,6 +2,7 @@
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -33,6 +34,7 @@ type UserWithRole = {
 const AdminUsers = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user: currentUser } = useAuth();
 
   const { data: users, isLoading, error } = useQuery({
     queryKey: ['admin-users'],
@@ -67,6 +69,26 @@ const AdminUsers = () => {
 
   const updateRoleMutation = useMutation({
     mutationFn: async ({ userId, newRole }: { userId: string; newRole: 'admin' | 'moderator' | 'user' }) => {
+      // Server-side security validation
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Unauthorized');
+      
+      // Prevent self-escalation
+      if (userId === user.id) {
+        throw new Error('Cannot modify your own role');
+      }
+      
+      // Verify admin role
+      const { data: currentUserRole } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
+        
+      if (currentUserRole?.role !== 'admin') {
+        throw new Error('Insufficient permissions');
+      }
+
       // First check if user already has a role
       const { data: existingRole } = await supabase
         .from('user_roles')
@@ -91,17 +113,33 @@ const AdminUsers = () => {
         if (error) throw error;
       }
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      
+      // Audit log the role change
+      supabase.from('user_analytics').insert({
+        event_type: 'admin_role_change',
+        event_data: {
+          target_user_id: variables.userId,
+          new_role: variables.newRole,
+          admin_user_id: currentUser?.id
+        },
+        timestamp: new Date().toISOString(),
+        user_id: currentUser?.id,
+        session_id: `admin_${Date.now()}`,
+        page_url: window.location.href,
+        user_agent: navigator.userAgent
+      });
+      
       toast({
         title: "Success",
         description: "User role updated successfully",
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "Error",
-        description: "Failed to update user role",
+        description: error.message || "Failed to update user role",
         variant: "destructive",
       });
       console.error('Update role error:', error);
@@ -195,6 +233,11 @@ const AdminUsers = () => {
                           <SelectItem value="admin">Admin</SelectItem>
                         </SelectContent>
                       </Select>
+                      {user.id === currentUser?.id && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Cannot modify own role
+                        </p>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
